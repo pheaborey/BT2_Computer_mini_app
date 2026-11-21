@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>BT2_Computer_mini_app</title>
+    
+    <!-- Official Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Configure Tailwind to use Telegram CSS Variables with crisp fallbacks -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    colors: {
+                        tg: {
+                            bg: 'var(--tg-theme-bg-color, #ffffff)',
+                            text: 'var(--tg-theme-text-color, #0f172a)',
+                            hint: 'var(--tg-theme-hint-color, #64748b)',
+                            link: 'var(--tg-theme-link-color, #2481cc)',
+                            button: 'var(--tg-theme-button-color, #2481cc)',
+                            buttonText: 'var(--tg-theme-button-text-color, #ffffff)',
+                            secondaryBg: 'var(--tg-theme-secondary-bg-color, #f1f5f9)',
+                            sectionBg: 'var(--tg-theme-section-bg-color, #ffffff)',
+                            destructive: 'var(--tg-theme-destructive-text-color, #ef4444)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Fallback Root Variables for Browser Preview & Theme Synchronization */
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #0f172a;
+            --tg-theme-hint-color: #64748b;
+            --tg-theme-link-color: #2481cc;
+            --tg-theme-button-color: #2481cc;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-secondary-bg-color: #f4f4f5;
+            --tg-theme-section-bg-color: #ffffff;
+            --tg-theme-destructive-text-color: #ef4444;
+            --safe-area-top: env(safe-area-inset-top, 0px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        /* Support System Dark Mode automatically when outside Telegram */
+        @media (prefers-color-scheme: dark) {
+            :root:not(.tg-initialized) {
+                --tg-theme-bg-color: #18181b;
+                --tg-theme-text-color: #f4f4f5;
+                --tg-theme-hint-color: #a1a1aa;
+                --tg-theme-link-color: #38bdf8;
+                --tg-theme-button-color: #0284c7;
+                --tg-theme-button-text-color: #ffffff;
+                --tg-theme-secondary-bg-color: #27272a;
+                --tg-theme-section-bg-color: #1f1f23;
+            }
+        }
+
+        html, body {
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            overscroll-behavior-y: none;
+        }
+
+        /* Hide scrollbars for horizontal category pills while maintaining smooth scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Smooth Bottom Sheet Transitions */
+        .bottom-sheet-backdrop {
+            transition: opacity 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        .bottom-sheet-panel {
+            transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+            padding-bottom: calc(1rem + var(--safe-area-bottom));
+        }
+
+        /* Subtle card tap feedback */
+        .tap-scale {
+            transition: transform 0.14s cubic-bezier(0.2, 0, 0, 1);
+        }
+        .tap-scale:active {
+            transform: scale(0.96);
+        }
+
+        /* Safe area utilities */
+        .pt-safe {
+            padding-top: max(0.75rem, var(--safe-area-top));
+        }
+        .pb-safe-footer {
+            padding-bottom: calc(5.5rem + var(--safe-area-bottom));
+        }
+        .pb-safe-bar {
+            padding-bottom: max(0.75rem, var(--safe-area-bottom));
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-tg-button selection:text-tg-buttonText">
+
+    <!-- ===================================================================== -->
+    <!-- STICKY COMPACT HEADER: Store Title, Search Input & Category Pills     -->
+    <!-- ===================================================================== -->
+    <header class="sticky top-0 z-30 bg-tg-bg/95 backdrop-blur-md border-b border-black/5 dark:border-white/5 pt-safe transition-colors duration-200">
+        <div class="max-w-2xl mx-auto px-3.5 pb-2.5">
+            
+            <!-- Top Bar: Brand Identity + Theme Toggle (Browser Preview Helper) & Cart Badge -->
+            <div class="flex items-center justify-between gap-2 mb-2.5">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-9 h-9 rounded-xl bg-tg-button text-tg-buttonText flex items-center justify-center font-extrabold text-base shadow-sm shrink-0">
+                        K&amp;B
+                    </div>
+                    <div class="truncate">
+                        <div class="flex items-center gap-1.5">
+                            <h1 class="text-base font-bold tracking-tight truncate">Kova &amp; Bean</h1>
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                                Open
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-tg-hint truncate">Specialty Roastery &amp; Bakery • 15–25 min</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <!-- Preview Theme Switcher (Visible when outside Telegram or for quick testing) -->
+                    <button id="themeToggleBtn" onclick="togglePreviewTheme()" aria-label="Toggle theme" class="p-2 rounded-xl bg-tg-secondaryBg text-tg-text tap-scale flex items-center justify-center" title="Switch Light/Dark Preview">
+                        <svg id="themeIconSun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="4"></circle>
+                            <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+                        </svg>
+                        <svg id="themeIconMoon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Quick Cart Trigger Button -->
+                    <button onclick="openCartDrawer()" aria-label="Open Cart" class="relative p-2 rounded-xl bg-tg-secondaryBg text-tg-text tap-scale flex items-center gap-1.5 px-2.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                        </svg>
+                        <span id="headerCartCount" class="text-xs font-bold">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Compact Search Bar -->
+            <div class="relative mb-2.5">
+                <svg class="w-4 h-4 text-tg-hint absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path stroke-linecap="round" d="m21 21-4.3-4.3"></path>
+                </svg>
+                <input 
+                    id="searchInput" 
+                    type="search" 
+                    placeholder="Search espresso, pastries, beans..." 
+                    class="w-full bg-tg-secondaryBg text-tg-text placeholder-tg-hint text-sm rounded-xl pl-9 pr-8 py-2 outline-none focus:ring-2 focus:ring-tg-button/50 transition-all"
+                >
+                <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-tg-hint hover:text-tg-text">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" d="M18 6 6 18M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Horizontal Scroll Category Filter Pills -->
+            <nav id="categoryBar" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5" aria-label="Product Categories">
+                <!-- Dynamically rendered by JS -->
+            </nav>
+        </div>
+    </header>
+
+    <!-- ===================================================================== -->
+    <!-- MAIN CONTENT: Featured Promo Banner + 2-Column Product Grid           -->
+    <!-- ===================================================================== -->
+    <main class="flex-1 w-full max-w-2xl mx-auto px-3.5 pt-3 pb-safe-footer">
+        
+        <!-- Compact Promo Banner -->
+        <div id="promoBanner" class="mb-3.5 rounded-2xl bg-tg-secondaryBg p-3 flex items-center justify-between gap-3 border border-black/5 dark:border-white/5">
+            <div class="min-w-0">
+                <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-tg-button/15 text-tg-button mb-1">
+                    Telegram Exclusive
+                </span>
+                <p class="text-xs font-semibold leading-snug">
+                    Use code <button onclick="copyPromoCode('TG15')" class="font-mono font-bold underline decoration-tg-button text-tg-button">TG15</button> for 15% off your order
+                </p>
+            </div>
+            <button onclick="copyPromoCode('TG15')" class="shrink-0 px-3 py-1.5 rounded-xl bg-tg-bg text-tg-text text-xs font-semibold shadow-sm border border-black/5 dark:border-white/10 tap-scale">
+                Copy
+            </button>
+        </div>
+
+        <!-- Section Header -->
+        <div class="flex items-center justify-between mb-2.5">
+            <h2 id="sectionHeading" class="text-sm font-bold tracking-tight">All Menu Items</h2>
+            <span id="itemCountLabel" class="text-xs text-tg-hint font-medium">8 items</span>
+        </div>
+
+        <!-- 2-Column Responsive Product Grid -->
+        <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
+            <!-- Dynamically rendered product cards -->
+        </div>
+
+        <!-- Empty Search State -->
+        <div id="emptyState" class="hidden py-14 text-center">
+            <div class="w-12 h-12 rounded-2xl bg-tg-secondaryBg text-tg-hint flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path stroke-linecap="round" d="m21 21-4.3-4.3"></path>
+                </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">No matching items found</h3>
+            <p class="text-xs text-tg-hint mb-4">Try clearing your search or switching categories.</p>
+            <button onclick="resetFilters()" class="px-4 py-2 rounded-xl bg-tg-button text-tg-buttonText text-xs font-semibold tap-scale">
+                Reset Filters
+            </button>
+        </div>
+    </main>
+
+    <!-- ===================================================================== -->
+    <!-- FALLBACK STICKY BOTTOM BAR (Shown when outside Telegram or Desktop)   -->
+    <!-- ===================================================================== -->
+    <div id="fallbackBottomBar" class="hidden fixed bottom-0 inset-x-0 z-30 bg-tg-bg/95 backdrop-blur-md border-t border-black/10 dark:border-white/10 px-3.5 pt-2.5 pb-safe-bar transition-all duration-200">
+        <div class="max-w-2xl mx-auto">
+            <button id="fallbackMainBtn" onclick="handleMainButtonClick()" class="w-full py-3.5 px-4 rounded-xl bg-tg-button text-tg-buttonText font-bold text-sm shadow-lg flex items-center justify-between tap-scale">
+                <span class="flex items-center gap-2">
+                    <span id="fallbackBtnBadge" class="px-2 py-0.5 rounded-md bg-black/20 text-xs font-extrabold">0</span>
+                    <span id="fallbackBtnLabel">View Order</span>
+                </span>
+                <span id="fallbackBtnTotal" class="font-extrabold">$0.00</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SLIDE-UP PRODUCT DETAIL BOTTOM SHEET                                  -->
+    <!-- ===================================================================== -->
+    <div id="productModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div id="productModalBackdrop" onclick="closeProductModal()" class="bottom-sheet-backdrop fixed inset-0 bg-black/55 opacity-0"></div>
+        
+        <!-- Sheet Panel -->
+        <div id="productModalPanel" class="bottom-sheet-panel fixed inset-x-0 bottom-0 max-w-2xl mx-auto bg-tg-bg rounded-t-3xl shadow-2xl transform translate-y-full overflow-hidden flex flex-col max-h-[88vh]">
+            <!-- Drag Handle -->
+            <div class="w-full flex justify-center pt-2.5 pb-1 shrink-0" onclick="closeProductModal()">
+                <div class="w-10 h-1 rounded-full bg-tg-hint/30"></div>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="overflow-y-auto px-4 pb-4 space-y-4">
+                <!-- Product Hero Image -->
+                <div class="relative aspect-[16/10] w-full rounded-2xl overflow-hidden bg-tg-secondaryBg">
+                    <img id="modalImg" src="" alt="" class="w-full h-full object-cover">
+                    <span id="modalBadge" class="hidden absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold bg-tg-bg/90 text-tg-text backdrop-blur-sm shadow-sm"></span>
+                    <button onclick="closeProductModal()" aria-label="Close" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm tap-scale">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" d="M18 6 6 18M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Title & Price -->
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <span id="modalCategory" class="text-[11px] font-semibold uppercase tracking-wider text-tg-button"></span>
+                        <h3 id="modalTitle" class="text-lg font-extrabold leading-tight mt-0.5"></h3>
+                    </div>
+                    <div id="modalPrice" class="text-lg font-extrabold text-tg-button shrink-0"></div>
+                </div>
+
+                <!-- Description -->
+                <p id="modalDesc" class="text-xs sm:text-sm text-tg-hint leading-relaxed"></p>
+
+                <!-- Optional Customization / Size Selector -->
+                <div id="modalOptionsWrapper" class="space-y-2 pt-1">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-tg-hint">Select Option</label>
+                    <div id="modalOptionsList" class="grid grid-cols-3 gap-2">
+                        <!-- Option pills injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Quantity & Add Action Bar -->
+                <div class="pt-2 flex items-center gap-3">
+                    <div class="flex items-center justify-between bg-tg-secondaryBg rounded-xl p-1 w-32 shrink-0">
+                        <button onclick="adjustModalQty(-1)" class="w-9 h-9 rounded-lg bg-tg-bg text-tg-text font-bold text-base flex items-center justify-center shadow-sm tap-scale">−</button>
+                        <span id="modalQtyValue" class="font-bold text-sm">1</span>
+                        <button onclick="adjustModalQty(1)" class="w-9 h-9 rounded-lg bg-tg-bg text-tg-text font-bold text-base flex items-center justify-center shadow-sm tap-scale">+</button>
+                    </div>
+
+                    <button id="modalAddBtn" onclick="confirmModalAdd()" class="flex-1 py-3.5 px-4 rounded-xl bg-tg-button text-tg-buttonText font-bold text-sm shadow-md flex items-center justify-center gap-2 tap-scale">
+                        <span>Add to Order</span>
+                        <span>•</span>
+                        <span id="modalBtnPrice">$0.00</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SLIDE-UP CART & CHECKOUT DRAWER                                       -->
+    <!-- ===================================================================== -->
+    <div id="cartDrawer" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div id="cartDrawerBackdrop" onclick="closeCartDrawer()" class="bottom-sheet-backdrop fixed inset-0 bg-black/55 opacity-0"></div>
+        
+        <!-- Drawer Panel -->
+        <div id="cartDrawerPanel" class="bottom-sheet-panel fixed inset-x-0 bottom-0 max-w-2xl mx-auto bg-tg-bg rounded-t-3xl shadow-2xl transform translate-y-full flex flex-col max-h-[90vh]">
+            <!-- Handle & Header -->
+            <div class="px-4 pt-2.5 pb-3 border-b border-black/5 dark:border-white/5 shrink-0">
+                <div class="w-10 h-1 rounded-full bg-tg-hint/30 mx-auto mb-2.5" onclick="closeCartDrawer()"></div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-extrabold">Your Order</h3>
+                        <p id="cartDrawerSubtitle" class="text-xs text-tg-hint">Review items before checkout</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="clearCartBtn" onclick="clearCart()" class="text-xs font-semibold text-tg-destructive px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 tap-scale">
+                            Clear
+                        </button>
+                        <button onclick="closeCartDrawer()" aria-label="Close Cart" class="w-8 h-8 rounded-full bg-tg-secondaryBg text-tg-text flex items-center justify-center tap-scale">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" d="M18 6 6 18M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scrollable Cart Body -->
+            <div class="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+                
+                <!-- Cart Item List -->
+                <div id="cartItemsContainer" class="space-y-2.5">
+                    <!-- Dynamically rendered cart rows -->
+                </div>
+
+                <!-- Delivery / Pickup Toggle -->
+                <div class="bg-tg-secondaryBg p-1 rounded-xl grid grid-cols-2 gap-1">
+                    <button id="modeDeliveryBtn" onclick="setFulfillmentMode('delivery')" class="py-2 rounded-lg text-xs font-bold bg-tg-bg text-tg-text shadow-sm transition-all">
+                        🛵 Express Delivery ($2.50)
+                    </button>
+                    <button id="modePickupBtn" onclick="setFulfillmentMode('pickup')" class="py-2 rounded-lg text-xs font-semibold text-tg-hint transition-all">
+                        🏪 Store Pickup (Free)
+                    </button>
+                </div>
+
+                <!-- Order Note Input -->
+                <div>
+                    <input 
+                        id="orderNoteInput" 
+                        type="text" 
+                        placeholder="Add note for barista / courier (e.g. extra hot, gate code)..." 
+                        class="w-full bg-tg-secondaryBg text-tg-text placeholder-tg-hint text-xs rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-tg-button/50"
+                    >
+                </div>
+
+                <!-- Promo Code Input -->
+                <div class="flex items-center gap-2">
+                    <input 
+                        id="promoInput" 
+                        type="text" 
+                        placeholder="Promo code (try TG15)" 
+                        class="flex-1 bg-tg-secondaryBg text-tg-text placeholder-tg-hint text-xs uppercase rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-tg-button/50"
+                    >
+                    <button onclick="applyPromoCode()" class="px-4 py-2.5 rounded-xl bg-tg-secondaryBg text-tg-button font-bold text-xs border border-tg-button/20 tap-scale">
+                        Apply
+                    </button>
+                </div>
+                <p id="promoFeedback" class="hidden text-xs font-medium -mt-2"></p>
+
+                <!-- Order Summary Breakdown -->
+                <div class="bg-tg-secondaryBg rounded-2xl p-3.5 space-y-2 text-xs">
+                    <div class="flex justify-between text-tg-hint">
+                        <span>Subtotal</span>
+                        <span id="summarySubtotal" class="font-semibold text-tg-text">$0.00</span>
+                    </div>
+                    <div id="summaryDiscountRow" class="hidden flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
+                        <span>Discount (<span id="summaryPromoLabel">TG15</span>)</span>
+                        <span id="summaryDiscount">-$0.00</span>
+                    </div>
+                    <div class="flex justify-between text-tg-hint">
+                        <span id="summaryFeeLabel">Express Delivery</span>
+                        <span id="summaryFee" class="font-semibold text-tg-text">$2.50</span>
+                    </div>
+                    <div class="border-t border-black/10 dark:border-white/10 pt-2 flex justify-between items-center text-sm font-extrabold">
+                        <span>Total</span>
+                        <span id="summaryTotal" class="text-tg-button text-base">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Browser Fallback Checkout Button inside Drawer -->
+                <div id="drawerFallbackCheckoutWrap" class="pt-1">
+                    <button onclick="processCheckout()" class="w-full py-3.5 px-4 rounded-xl bg-tg-button text-tg-buttonText font-bold text-sm shadow-lg flex items-center justify-center gap-2 tap-scale">
+                        <span>Place Order</span>
+                        <span>•</span>
+                        <span id="drawerFallbackTotal">$0.00</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- ORDER CONFIRMATION SUCCESS MODAL                                      -->
+    <!-- ===================================================================== -->
+    <div id="confirmationModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-xs"></div>
+        <div class="relative bg-tg-bg rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-black/5 dark:border-white/10 space-y-4">
+            <div class="w-16 h-16 rounded-full bg-emerald-500/15 text-emerald-500 flex items-center justify-center mx-auto">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                </svg>
+            </div>
+            <div>
+                <span id="orderNumberTag" class="inline-block px-2.5 py-0.5 rounded-full bg-tg-secondaryBg text-tg-hint font-mono text-xs font-bold mb-1.5">
+                    ORDER #KB-4921
+                </span>
+                <h3 class="text-lg font-extrabold">Order Confirmed!</h3>
+                <p id="confirmationMsg" class="text-xs text-tg-hint mt-1 leading-relaxed">
+                    We've sent your order receipt to your Telegram chat. Your barista is preparing it now!
+                </p>
+            </div>
+            <div class="bg-tg-secondaryBg rounded-2xl p-3 text-left text-xs space-y-1">
+                <div class="flex justify-between">
+                    <span class="text-tg-hint">Estimated Time:</span>
+                    <span class="font-bold">15 – 25 mins</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-tg-hint">Amount Paid:</span>
+                    <span id="confirmedTotalAmount" class="font-bold text-tg-button">$0.00</span>
+                </div>
+            </div>
+            <button onclick="finishOrderFlow()" class="w-full py-3 rounded-xl bg-tg-button text-tg-buttonText font-bold text-sm tap-scale">
+                Done
+            </button>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- TOAST NOTIFICATION (Replaces alert() cleanly)                         -->
+    <!-- ===================================================================== -->
+    <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-200 transform -translate-y-2">
+        <div class="bg-zinc-900/95 dark:bg-zinc-100/95 text-white dark:text-zinc-900 text-xs font-semibold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 whitespace-nowrap">
+            <span id="toastIcon">✓</span>
+            <span id="toastMessage">Copied to clipboard</span>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- APPLICATION LOGIC & TELEGRAM MINI APP INTEGRATION                     -->
+    <!-- ===================================================================== -->
+    <script>
+        /**
+         * 1. SAMPLE PRODUCT CATALOG DATA
+         * Rich specialty coffee, pastries, whole beans, and minimalist merch.
+         */
+        const PRODUCTS = [
+            {
+                id: 'esp-01',
+                category: 'Coffee',
+                badge: 'Bestseller',
+                title: 'Velvet Oat Flat White',
+                shortDesc: 'Double ristretto shot pulled over silky micro-foamed oat milk.',
+                fullDesc: 'Crafted with our signature Ethiopian Yirgacheffe & Colombian Huila house blend. Double ristretto extraction delivers rich cocoa notes balanced by velvety steamed barista oat milk.',
+                price: 4.75,
+                options: ['Regular (8oz)', 'Large (12oz)', 'Iced (12oz)'],
+                image: 'https://placehold.co/600x450/2c1e16/f5ebe0?text=Velvet+Oat+Flat+White'
+            },
+            {
+                id: 'esp-02',
+                category: 'Coffee',
+                badge: 'New',
+                title: 'Kyoto Cold Brew Tonic',
+                shortDesc: '18-hour slow-drip single origin over botanical yuzu tonic.',
+                fullDesc: 'Bright, effervescent, and deeply refreshing. Our 18-hour Kyoto-style slow drip concentrate layered over artisanal yuzu botanical tonic and expressed Valencia orange peel.',
+                price: 5.50,
+                options: ['12oz Glass', '16oz Tall'],
+                image: 'https://placehold.co/600x450/1e293b/38bdf8?text=Kyoto+Cold+Brew+Tonic'
+            },
+            {
+                id: 'pas-01',
+                category: 'Pastries',
+                badge: 'Fresh Baked',
+                title: 'Cardamom Knot Croissant',
+                shortDesc: 'Laminated French butter pastry woven with freshly ground cardamom.',
+                fullDesc: 'Baked every morning at 6:00 AM using Normandy cultured butter. Flaky 27-layer laminated dough braided with aromatic green cardamom pods and raw pearl sugar.',
+                price: 4.25,
+                options: ['Warm', 'Room Temp'],
+                image: 'https://placehold.co/600x450/78350f/fef3c7?text=Cardamom+Croissant'
+            },
+            {
+                id: 'pas-02',
+                category: 'Pastries',
+                badge: null,
+                title: 'Basque Burnt Cheesecake',
+                shortDesc: 'Caramelized crust with a molten, creamy vanilla bean center.',
+                fullDesc: 'San Sebastián style crustless cheesecake baked at high heat for a deep caramelized top and an ultra-creamy, custard-like Madagascar vanilla center.',
+                price: 6.50,
+                options: ['Classic Slice', 'With Berry Compote'],
+                image: 'https://placehold.co/600x450/451a03/fde68a?text=Basque+Cheesecake'
+            },
+            {
+                id: 'mat-01',
+                category: 'Matcha & Tea',
+                badge: 'Ceremonial',
+                title: 'Uji Ceremonial Matcha Latte',
+                shortDesc: 'First-harvest stone-ground Uji matcha whisked to order.',
+                fullDesc: 'Shade-grown Tencha leaves from Uji, Kyoto, stone-milled into vibrant emerald powder. Hand-whisked to order and poured over your choice of cold or steamed milk.',
+                price: 5.75,
+                options: ['Oat Milk', 'Whole Milk', 'Almond Milk'],
+                image: 'https://placehold.co/600x450/14532d/dcfce7?text=Uji+Matcha+Latte'
+            },
+            {
+                id: 'bns-01',
+                category: 'Whole Beans',
+                badge: 'Single Origin',
+                title: 'Ethiopia Guji Natural (250g)',
+                shortDesc: 'Tasting notes: Blueberry jam, jasmine blossom, milk chocolate.',
+                fullDesc: 'Grown at 2,150 MASL in Hambela Wamena, Guji. Natural sun-dried processing produces explosive berry aromatics and a syrupy body ideal for V60 or Espresso.',
+                price: 18.00,
+                options: ['Whole Bean', 'Filter Grind', 'Espresso Grind'],
+                image: 'https://placehold.co/600x450/312e81/e0e7ff?text=Ethiopia+Guji+250g'
+            },
+            {
+                id: 'bns-02',
+                category: 'Whole Beans',
+                badge: null,
+                title: 'House Espresso Blend (500g)',
+                shortDesc: 'Tasting notes: Roasted hazelnut, dark caramel, bittersweet cacao.',
+                fullDesc: 'Our flagship daily driver combining washed Colombian and natural Brazilian lots. Developed specifically for heavy crema, low acidity, and sweet milk pairing.',
+                price: 29.00,
+                options: ['Whole Bean', 'Espresso Grind'],
+                image: 'https://placehold.co/600x450/18181b/f4f4f5?text=House+Espresso+500g'
+            },
+            {
+                id: 'mrc-01',
+                category: 'Gear & Merch',
+                badge: 'Limited',
+                title: 'Matte Ceramic Fellow Tumbler',
+                shortDesc: '12oz double-wall vacuum insulated with ceramic interior coating.',
+                fullDesc: 'Engineered to preserve pure coffee aroma without metallic aftertaste. Features a 360° sip lid, leak-proof seal, and laser-etched Kova & Bean emblem.',
+                price: 32.00,
+                options: ['Matte Black', 'Stone White'],
+                image: 'https://placehold.co/600x450/0f172a/94a3b8?text=Ceramic+Tumbler+12oz'
+            }
+        ];
+
+        const CATEGORIES = ['All', 'Coffee', 'Pastries', 'Matcha & Tea', 'Whole Beans', 'Gear & Merch'];
+
+        /**
+         * 2. APPLICATION STATE
+         */
+        const state = {
+            selectedCategory: 'All',
+            searchQuery: '',
+            cart: [], // Array of { key, productId, title, price, image, option, qty }
+            fulfillmentMode: 'delivery', // 'delivery' | 'pickup'
+            promoCode: null, // 'TG15'
+            discountRate: 0,
+            activeModalProduct: null,
+            activeModalOption: null,
+            activeModalQty: 1,
+            isCartOpen: false,
+            isProductModalOpen: false,
+            isTelegramEnv: false,
+            tg: null
+        };
+
+        /**
+         * 3. TELEGRAM WEBAPP SDK INITIALIZATION & THEME SYNC
+         */
+        function initTelegramWebApp() {
+            const tg = window.Telegram && window.Telegram.WebApp;
+            
+            // Detect if running inside genuine Telegram WebApp container
+            if (tg && tg.initData && tg.initData.length > 0) {
+                state.isTelegramEnv = true;
+                state.tg = tg;
+                document.documentElement.classList.add('tg-initialized');
+
+                // Notify Telegram that the Mini App is ready to be displayed
+                tg.ready();
+                
+                // Expand Mini App to full available viewport height
+                tg.expand();
+
+                // Apply Telegram Theme Parameters to CSS Variables
+                syncTelegramTheme(tg);
+                tg.onEvent('themeChanged', () => syncTelegramTheme(tg));
+
+                // Configure Native MainButton
+                tg.MainButton.onClick(handleMainButtonClick);
+
+                // Configure Native BackButton for modals/drawers
+                tg.BackButton.onClick(() => {
+                    if (state.isProductModalOpen) closeProductModal();
+                    else if (state.isCartOpen) closeCartDrawer();
+                });
+
+                // Hide browser theme toggle if inside native Telegram
+                const themeBtn = document.getElementById('themeToggleBtn');
+                if (themeBtn) themeBtn.classList.add('hidden');
+            } else {
+                // Standalone browser / desktop preview fallback
+                state.isTelegramEnv = false;
+                updateThemeIcons();
+            }
+        }
+
+        function syncTelegramTheme(tg) {
+            if (!tg || !tg.themeParams) return;
+            const p = tg.themeParams;
+            const root = document.documentElement.style;
+
+            if (p.bg_color) root.setProperty('--tg-theme-bg-color', p.bg_color);
+            if (p.text_color) root.setProperty('--tg-theme-text-color', p.text_color);
+            if (p.hint_color) root.setProperty('--tg-theme-hint-color', p.hint_color);
+            if (p.link_color) root.setProperty('--tg-theme-link-color', p.link_color);
+            if (p.button_color) root.setProperty('--tg-theme-button-color', p.button_color);
+            if (p.button_text_color) root.setProperty('--tg-theme-button-text-color', p.button_text_color);
+            if (p.secondary_bg_color) root.setProperty('--tg-theme-secondary-bg-color', p.secondary_bg_color);
+
+            try {
+                if (p.bg_color) tg.setHeaderColor(p.bg_color);
+                if (p.bg_color) tg.setBackgroundColor(p.bg_color);
+            } catch (e) {
+                // Ignore if older Bot API version
+            }
+        }
+
+        /**
+         * Trigger Native Telegram Haptic Feedback safely
+         */
+        function triggerHaptic(type = 'light') {
+            try {
+                if (state.isTelegramEnv && state.tg && state.tg.HapticFeedback) {
+                    if (type === 'success' || type === 'warning' || type === 'error') {
+                        state.tg.HapticFeedback.notificationOccurred(type);
+                    } else if (type === 'selection') {
+                        state.tg.HapticFeedback.selectionChanged();
+                    } else {
+                        state.tg.HapticFeedback.impactOccurred(type); // 'light' | 'medium' | 'heavy'
+                    }
+                }
+            } catch (err) {
+                // Graceful fallback on desktop browsers
+            }
+        }
+
+        /**
+         * 4. RENDERING: CATEGORIES & PRODUCT GRID
+         */
+        function renderCategories() {
+            const bar = document.getElementById('categoryBar');
+            bar.innerHTML = CATEGORIES.map(cat => {
+                const isActive = state.selectedCategory === cat;
+                const activeClasses = isActive
+                    ? 'bg-tg-button text-tg-buttonText font-bold shadow-xs'
+                    : 'bg-tg-secondaryBg text-tg-text font-medium hover:opacity-85';
+                return `
+                    <button 
+                        onclick="selectCategory('${cat}')"
+                        class="px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap transition-all tap-scale shrink-0 ${activeClasses}"
+                    >
+                        ${cat}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function getFilteredProducts() {
+            return PRODUCTS.filter(item => {
+                const matchesCat = state.selectedCategory === 'All' || item.category === state.selectedCategory;
+                const q = state.searchQuery.trim().toLowerCase();
+                const matchesSearch = !q || 
+                    item.title.toLowerCase().includes(q) || 
+                    item.shortDesc.toLowerCase().includes(q) ||
+                    item.category.toLowerCase().includes(q);
+                return matchesCat && matchesSearch;
+            });
+        }
+
+        function getProductTotalQtyInCart(productId) {
+            return state.cart
+                .filter(c => c.productId === productId)
+                .reduce((sum, item) => sum + item.qty, 0);
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('productGrid');
+            const emptyState = document.getElementById('emptyState');
+            const countLabel = document.getElementById('itemCountLabel');
+            const heading = document.getElementById('sectionHeading');
+
+            const filtered = getFilteredProducts();
+            heading.textContent = state.selectedCategory === 'All' ? 'All Menu Items' : state.selectedCategory;
+            countLabel.textContent = `${filtered.length} ${filtered.length === 1 ? 'item' : 'items'}`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            grid.innerHTML = filtered.map(product => {
+                const qtyInCart = getProductTotalQtyInCart(product.id);
+                const badgeHtml = product.badge
+                    ? `<span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-tg-bg/90 text-tg-text backdrop-blur-xs shadow-xs">${product.badge}</span>`
+                    : '';
+
+                // Action Control: Quick '+' button OR Quantity Stepper if already added
+                const actionControlHtml = qtyInCart === 0
+                    ? `
+                        <button 
+                            onclick="event.stopPropagation(); quickAddProduct('${product.id}')" 
+                            aria-label="Add ${product.title}"
+                            class="w-8 h-8 rounded-xl bg-tg-button text-tg-buttonText flex items-center justify-center shadow-xs tap-scale shrink-0"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" d="M12 5v14M5 12h14"></path>
+                            </svg>
+                        </button>
+                    `
+                    : `
+                        <div onclick="event.stopPropagation()" class="flex items-center bg-tg-button text-tg-buttonText rounded-xl h-8 px-1 gap-1.5 shadow-xs shrink-0">
+                            <button onclick="quickDecrementProduct('${product.id}')" class="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-sm hover:bg-black/15 tap-scale">−</button>
+                            <span class="text-xs font-extrabold min-w-[14px] text-center">${qtyInCart}</span>
+                            <button onclick="quickAddProduct('${product.id}')" class="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-sm hover:bg-black/15 tap-scale">+</button>
+                        </div>
+                    `;
+
+                return `
+                    <article 
+                        onclick="openProductModal('${product.id}')"
+                        class="group bg-tg-secondaryBg/70 rounded-2xl overflow-hidden border border-black/5 dark:border-white/5 flex flex-col justify-between cursor-pointer tap-scale transition-colors"
+                    >
+                        <div>
+                            <!-- Crisp 4:3 Image Container -->
+                            <div class="relative aspect-[4/3] w-full bg-tg-secondaryBg overflow-hidden">
+                                <img 
+                                    src="${product.image}" 
+                                    alt="${product.title}" 
+                                    loading="lazy"
+                                    onerror="this.src='https://placehold.co/600x450/334155/f8fafc?text=Item'"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                >
+                                ${badgeHtml}
+                            </div>
+
+                            <!-- Card Copy -->
+                            <div class="p-2.5 pb-1.5">
+                                <h3 class="text-xs sm:text-sm font-bold leading-snug line-clamp-1">${product.title}</h3>
+                                <p class="text-[11px] text-tg-hint leading-tight line-clamp-2 mt-1">${product.shortDesc}</p>
+                            </div>
+                        </div>
+
+                        <!-- Card Footer: Price + Add/Stepper -->
+                        <div class="px-2.5 pb-2.5 pt-1 flex items-center justify-between gap-2">
+                            <span class="text-sm font-extrabold">$${product.price.toFixed(2)}</span>
+                            ${actionControlHtml}
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        /**
+         * 5. CART & CHECKOUT CALCULATIONS
+         */
+        function getCartTotals() {
+            const totalItems = state.cart.reduce((sum, item) => sum + item.qty, 0);
+            const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const discount = subtotal * state.discountRate;
+            const fee = (totalItems > 0 && state.fulfillmentMode === 'delivery') ? 2.50 : 0;
+            const total = Math.max(0, subtotal - discount + fee);
+
+            return { totalItems, subtotal, discount, fee, total };
+        }
+
+        function addToCart(productId, option, qty = 1) {
+            const product = PRODUCTS.find(p => p.id === productId);
+            if (!product) return;
+
+            const chosenOption = option || (product.options && product.options[0]) || 'Standard';
+            const key = `${productId}__${chosenOption}`;
+            const existing = state.cart.find(item => item.key === key);
+
+            if (existing) {
+                existing.qty += qty;
+            } else {
+                state.cart.push({
+                    key,
+                    productId: product.id,
+                    title: product.title,
+                    price: product.price,
+                    image: product.image,
+                    option: chosenOption,
+                    qty
+                });
+            }
+
+            triggerHaptic('light');
+            updateUI();
+        }
+
+        function quickAddProduct(productId) {
+            const product = PRODUCTS.find(p => p.id === productId);
+            if (!product) return;
+            addToCart(productId, product.options[0], 1);
+        }
+
+        function quickDecrementProduct(productId) {
+            // Find the last added variant of this product in cart
+            for (let i = state.cart.length - 1; i >= 0; i--) {
+                if (state.cart[i].productId === productId) {
+                    updateCartItemQty(state.cart[i].key, -1);
+                    break;
+                }
+            }
+        }
+
+        function updateCartItemQty(key, delta) {
+            const index = state.cart.findIndex(item => item.key === key);
+            if (index === -1) return;
+
+            state.cart[index].qty += delta;
+            if (state.cart[index].qty <= 0) {
+                state.cart.splice(index, 1);
+                triggerHaptic('medium');
+            } else {
+                triggerHaptic('light');
+            }
+
+            updateUI();
+
+            // Auto-close cart drawer if emptied while open
+            if (state.isCartOpen && state.cart.length === 0) {
+                closeCartDrawer();
+            }
+        }
+
+        function clearCart() {
+            state.cart = [];
+            state.promoCode = null;
+            state.discountRate = 0;
+            document.getElementById('promoInput').value = '';
+            document.getElementById('promoFeedback').classList.add('hidden');
+            triggerHaptic('warning');
+            updateUI();
+            closeCartDrawer();
+        }
+
+        /**
+         * 6. SYNC TELEGRAM MAINBUTTON & FALLBACK STICKY BAR
+         */
+        function syncCheckoutBar() {
+            const { totalItems, total } = getCartTotals();
+            const headerCount = document.getElementById('headerCartCount');
+            headerCount.textContent = totalItems;
+
+            const fallbackBar = document.getElementById('fallbackBottomBar');
+            const fallbackBadge = document.getElementById('fallbackBtnBadge');
+            const fallbackLabel = document.getElementById('fallbackBtnLabel');
+            const fallbackTotal = document.getElementById('fallbackBtnTotal');
+            const drawerFallbackWrap = document.getElementById('drawerFallbackCheckoutWrap');
+
+            if (totalItems === 0) {
+                // Hide Telegram MainButton & Fallback Bar when cart is empty
+                if (state.isTelegramEnv && state.tg) {
+                    state.tg.MainButton.hide();
+                }
+                fallbackBar.classList.add('hidden');
+                return;
+            }
+
+            const buttonLabel = state.isCartOpen
+                ? `Place Order • $${total.toFixed(2)}`
+                : `View Order (${totalItems}) • $${total.toFixed(2)}`;
+
+            if (state.isTelegramEnv && state.tg) {
+                // Use Native Telegram MainButton
+                fallbackBar.classList.add('hidden');
+                if (drawerFallbackWrap) drawerFallbackWrap.classList.add('hidden');
+
+                state.tg.MainButton.setText(buttonLabel);
+                if (!state.tg.MainButton.isVisible) {
+                    state.tg.MainButton.show();
+                }
+            } else {
+                // Use Responsive Browser Fallback Bar
+                if (drawerFallbackWrap) drawerFallbackWrap.classList.remove('hidden');
+
+                if (state.isCartOpen || state.isProductModalOpen) {
+                    fallbackBar.classList.add('hidden');
+                } else {
+                    fallbackBar.classList.remove('hidden');
+                    fallbackBadge.textContent = totalItems;
+                    fallbackLabel.textContent = 'View Order';
+                    fallbackTotal.textContent = `$${total.toFixed(2)}`;
+                }
+            }
+        }
+
+        function handleMainButtonClick() {
+            triggerHaptic('medium');
+            if (!state.isCartOpen) {
+                openCartDrawer();
+            } else {
+                processCheckout();
+            }
+        }
+
+        /**
+         * 7. PRODUCT DETAIL BOTTOM SHEET MODAL
+         */
+        function openProductModal(productId) {
+            const product = PRODUCTS.find(p => p.id === productId);
+            if (!product) return;
+
+            triggerHaptic('selection');
+            state.activeModalProduct = product;
+            state.activeModalOption = product.options[0];
+            state.activeModalQty = 1;
+            state.isProductModalOpen = true;
+
+            // Populate Modal Fields
+            document.getElementById('modalImg').src = product.image;
+            document.getElementById('modalImg').alt = product.title;
+            document.getElementById('modalCategory').textContent = product.category;
+            document.getElementById('modalTitle').textContent = product.title;
+            document.getElementById('modalPrice').textContent = `$${product.price.toFixed(2)}`;
+            document.getElementById('modalDesc').textContent = product.fullDesc;
+
+            const badgeEl = document.getElementById('modalBadge');
+            if (product.badge) {
+                badgeEl.textContent = product.badge;
+                badgeEl.classList.remove('hidden');
+            } else {
+                badgeEl.classList.add('hidden');
+            }
+
+            renderModalOptions();
+            updateModalTotals();
+
+            // Show BackButton inside Telegram
+            if (state.isTelegramEnv && state.tg) {
+                state.tg.BackButton.show();
+                state.tg.MainButton.hide();
+            }
+
+            // Animate Sheet Up
+            const modal = document.getElementById('productModal');
+            const backdrop = document.getElementById('productModalBackdrop');
+            const panel = document.getElementById('productModalPanel');
+
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                backdrop.classList.remove('opacity-0');
+                panel.classList.remove('translate-y-full');
+            });
+
+            syncCheckoutBar();
+        }
+
+        function renderModalOptions() {
+            const product = state.activeModalProduct;
+            const list = document.getElementById('modalOptionsList');
+            list.innerHTML = product.options.map(opt => {
+                const selected = state.activeModalOption === opt;
+                const cls = selected
+                    ? 'bg-tg-button text-tg-buttonText font-bold border-tg-button shadow-xs'
+                    : 'bg-tg-secondaryBg text-tg-text font-medium border-transparent';
+                return `
+                    <button 
+                        onclick="selectModalOption('${opt}')"
+                        class="py-2 px-2.5 rounded-xl text-xs border text-center truncate transition-all tap-scale ${cls}"
+                    >
+                        ${opt}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectModalOption(opt) {
+            triggerHaptic('selection');
+            state.activeModalOption = opt;
+            renderModalOptions();
+        }
+
+        function adjustModalQty(delta) {
+            const next = state.activeModalQty + delta;
+            if (next < 1 || next > 20) return;
+            triggerHaptic('light');
+            state.activeModalQty = next;
+            updateModalTotals();
+        }
+
+        function updateModalTotals() {
+            document.getElementById('modalQtyValue').textContent = state.activeModalQty;
+            const sum = state.activeModalProduct.price * state.activeModalQty;
+            document.getElementById('modalBtnPrice').textContent = `$${sum.toFixed(2)}`;
+        }
+
+        function confirmModalAdd() {
+            if (!state.activeModalProduct) return;
+            addToCart(state.activeModalProduct.id, state.activeModalOption, state.activeModalQty);
+            showToast(`Added ${state.activeModalQty}× ${state.activeModalProduct.title}`);
+            closeProductModal();
+        }
+
+        function closeProductModal() {
+            const modal = document.getElementById('productModal');
+            const backdrop = document.getElementById('productModalBackdrop');
+            const panel = document.getElementById('productModalPanel');
+
+            backdrop.classList.add('opacity-0');
+            panel.classList.add('translate-y-full');
+            state.isProductModalOpen = false;
+
+            if (state.isTelegramEnv && state.tg && !state.isCartOpen) {
+                state.tg.BackButton.hide();
+            }
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                syncCheckoutBar();
+            }, 280);
+        }
+
+        /**
+         * 8. CART & CHECKOUT DRAWER
+         */
+        function openCartDrawer() {
+            if (state.cart.length === 0) {
+                triggerHaptic('warning');
+                showToast('Your cart is empty — add an item first!', '🛒');
+                return;
+            }
+
+            triggerHaptic('light');
+            state.isCartOpen = true;
+            renderCartDrawer();
+
+            if (state.isTelegramEnv && state.tg) {
+                state.tg.BackButton.show();
+            }
+
+            const drawer = document.getElementById('cartDrawer');
+            const backdrop = document.getElementById('cartDrawerBackdrop');
+            const panel = document.getElementById('cartDrawerPanel');
+
+            drawer.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                backdrop.classList.remove('opacity-0');
+                panel.classList.remove('translate-y-full');
+            });
+
+            syncCheckoutBar();
+        }
+
+        function closeCartDrawer() {
+            const drawer = document.getElementById('cartDrawer');
+            const backdrop = document.getElementById('cartDrawerBackdrop');
+            const panel = document.getElementById('cartDrawerPanel');
+
+            backdrop.classList.add('opacity-0');
+            panel.classList.add('translate-y-full');
+            state.isCartOpen = false;
+
+            if (state.isTelegramEnv && state.tg) {
+                state.tg.BackButton.hide();
+            }
+
+            setTimeout(() => {
+                drawer.classList.add('hidden');
+                syncCheckoutBar();
+            }, 280);
+        }
+
+        function renderCartDrawer() {
+            const container = document.getElementById('cartItemsContainer');
+            const { totalItems, subtotal, discount, fee, total } = getCartTotals();
+
+            document.getElementById('cartDrawerSubtitle').textContent = `${totalItems} ${totalItems === 1 ? 'item' : 'items'} in your basket`;
+
+            container.innerHTML = state.cart.map(item => `
+                <div class="flex items-center gap-3 bg-tg-secondaryBg/70 p-2.5 rounded-2xl border border-black/5 dark:border-white/5">
+                    <img src="${item.image}" alt="${item.title}" class="w-14 h-14 rounded-xl object-cover shrink-0 bg-tg-secondaryBg">
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-xs font-bold truncate">${item.title}</h4>
+                        <p class="text-[11px] text-tg-hint truncate">${item.option}</p>
+                        <p class="text-xs font-extrabold text-tg-button mt-0.5">$${(item.price * item.qty).toFixed(2)}</p>
+                    </div>
+                    <div class="flex items-center bg-tg-bg rounded-xl p-1 gap-1.5 shadow-xs shrink-0">
+                        <button onclick="updateCartItemQty('${item.key}', -1)" class="w-7 h-7 rounded-lg bg-tg-secondaryBg text-tg-text font-bold text-sm flex items-center justify-center tap-scale">−</button>
+                        <span class="text-xs font-extrabold min-w-[16px] text-center">${item.qty}</span>
+                        <button onclick="updateCartItemQty('${item.key}', 1)" class="w-7 h-7 rounded-lg bg-tg-secondaryBg text-tg-text font-bold text-sm flex items-center justify-center tap-scale">+</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Update Summary Breakdown
+            document.getElementById('summarySubtotal').textContent = `$${subtotal.toFixed(2)}`;
+            
+            const discountRow = document.getElementById('summaryDiscountRow');
+            if (discount > 0) {
+                discountRow.classList.remove('hidden');
+                document.getElementById('summaryPromoLabel').textContent = state.promoCode;
+                document.getElementById('summaryDiscount').textContent = `-$${discount.toFixed(2)}`;
+            } else {
+                discountRow.classList.add('hidden');
+            }
+
+            document.getElementById('summaryFeeLabel').textContent = state.fulfillmentMode === 'delivery' ? 'Express Delivery' : 'Store Pickup';
+            document.getElementById('summaryFee').textContent = fee > 0 ? `$${fee.toFixed(2)}` : 'Free';
+            document.getElementById('summaryTotal').textContent = `$${total.toFixed(2)}`;
+            document.getElementById('drawerFallbackTotal').textContent = `$${total.toFixed(2)}`;
+        }
+
+        function setFulfillmentMode(mode) {
+            triggerHaptic('selection');
+            state.fulfillmentMode = mode;
+
+            const delBtn = document.getElementById('modeDeliveryBtn');
+            const pickBtn = document.getElementById('modePickupBtn');
+
+            if (mode === 'delivery') {
+                delBtn.className = 'py-2 rounded-lg text-xs font-bold bg-tg-bg text-tg-text shadow-sm transition-all';
+                pickBtn.className = 'py-2 rounded-lg text-xs font-semibold text-tg-hint transition-all';
+            } else {
+                pickBtn.className = 'py-2 rounded-lg text-xs font-bold bg-tg-bg text-tg-text shadow-sm transition-all';
+                delBtn.className = 'py-2 rounded-lg text-xs font-semibold text-tg-hint transition-all';
+            }
+
+            updateUI();
+        }
+
+        function applyPromoCode() {
+            const input = document.getElementById('promoInput');
+            const feedback = document.getElementById('promoFeedback');
+            const code = input.value.trim().toUpperCase();
+
+            feedback.classList.remove('hidden');
+
+            if (code === 'TG15' || code === 'WELCOME15') {
+                state.promoCode = code;
+                state.discountRate = 0.15;
+                feedback.textContent = `✓ Promo code ${code} applied (15% off)`;
+                feedback.className = 'text-xs font-semibold text-emerald-600 dark:text-emerald-400 -mt-2';
+                triggerHaptic('success');
+            } else if (code === 'COFFEE10') {
+                state.promoCode = code;
+                state.discountRate = 0.10;
+                feedback.textContent = `✓ Promo code ${code} applied (10% off)`;
+                feedback.className = 'text-xs font-semibold text-emerald-600 dark:text-emerald-400 -mt-2';
+                triggerHaptic('success');
+            } else {
+                state.promoCode = null;
+                state.discountRate = 0;
+                feedback.textContent = 'Invalid promo code. Try TG15 for 15% off.';
+                feedback.className = 'text-xs font-semibold text-tg-destructive -mt-2';
+                triggerHaptic('error');
+            }
+
+            updateUI();
+        }
+
+        /**
+         * 9. CHECKOUT & ORDER CONFIRMATION FLOW
+         */
+        function processCheckout() {
+            const { totalItems, subtotal, discount, fee, total } = getCartTotals();
+            if (totalItems === 0) return;
+
+            triggerHaptic('success');
+
+            const orderPayload = {
+                orderId: `KB-${Math.floor(1000 + Math.random() * 9000)}`,
+                items: state.cart.map(i => ({
+                    id: i.productId,
+                    title: i.title,
+                    option: i.option,
+                    qty: i.qty,
+                    unitPrice: i.price
+                })),
+                fulfillment: state.fulfillmentMode,
+                note: document.getElementById('orderNoteInput').value.trim(),
+                promoCode: state.promoCode,
+                totals: {
+                    subtotal: Number(subtotal.toFixed(2)),
+                    discount: Number(discount.toFixed(2)),
+                    fee: Number(fee.toFixed(2)),
+                    total: Number(total.toFixed(2))
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            // Hide Telegram MainButton during confirmation modal
+            if (state.isTelegramEnv && state.tg) {
+                state.tg.MainButton.hide();
+                state.tg.BackButton.hide();
+            }
+
+            // Close Cart Drawer & Display Confirmation Modal
+            closeCartDrawer();
+            document.getElementById('orderNumberTag').textContent = `ORDER #${orderPayload.orderId}`;
+            document.getElementById('confirmedTotalAmount').textContent = `$${total.toFixed(2)}`;
+            document.getElementById('confirmationModal').classList.remove('hidden');
+
+            // Store payload for final Telegram sendData() or close()
+            window.__latestOrderPayload = orderPayload;
+        }
+
+        function finishOrderFlow() {
+            triggerHaptic('light');
+            const payload = window.__latestOrderPayload;
+
+            // If launched via KeyboardButton WebApp in Telegram, sendData transmits JSON back to bot
+            if (state.isTelegramEnv && state.tg && payload) {
+                try {
+                    state.tg.sendData(JSON.stringify(payload));
+                } catch (e) {
+                    // Inline button WebApps do not support sendData; close cleanly instead
+                    state.tg.close();
+                }
+            }
+
+            // Reset state for browser preview reuse
+            document.getElementById('confirmationModal').classList.add('hidden');
+            state.cart = [];
+            state.promoCode = null;
+            state.discountRate = 0;
+            document.getElementById('promoInput').value = '';
+            document.getElementById('orderNoteInput').value = '';
+            document.getElementById('promoFeedback').classList.add('hidden');
+            updateUI();
+        }
+
+        /**
+         * 10. SEARCH, FILTERS & UTILITIES
+         */
+        function selectCategory(cat) {
+            triggerHaptic('selection');
+            state.selectedCategory = cat;
+            renderCategories();
+            renderProducts();
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            state.searchQuery = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            renderProducts();
+        }
+
+        function resetFilters() {
+            state.selectedCategory = 'All';
+            clearSearch();
+            renderCategories();
+            renderProducts();
+        }
+
+        function copyPromoCode(code) {
+            triggerHaptic('light');
+            const tempInput = document.createElement('input');
+            tempInput.value = code;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            // Also pre-fill the cart promo input for convenience
+            document.getElementById('promoInput').value = code;
+            showToast(`Copied "${code}" — 15% off applied at checkout!`);
+        }
+
+        let toastTimer = null;
+        function showToast(msg, icon = '✓') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = msg;
+            document.getElementById('toastIcon').textContent = icon;
+
+            toast.classList.remove('opacity-0', '-translate-y-2');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-2');
+            }, 2200);
+        }
+
+        /**
+         * Browser Preview Dark/Light Theme Switcher
+         */
+        let previewDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        function togglePreviewTheme() {
+            previewDark = !previewDark;
+            const root = document.documentElement.style;
+            if (previewDark) {
+                root.setProperty('--tg-theme-bg-color', '#18181b');
+                root.setProperty('--tg-theme-text-color', '#f4f4f5');
+                root.setProperty('--tg-theme-hint-color', '#a1a1aa');
+                root.setProperty('--tg-theme-button-color', '#0284c7');
+                root.setProperty('--tg-theme-button-text-color', '#ffffff');
+                root.setProperty('--tg-theme-secondary-bg-color', '#27272a');
+            } else {
+                root.setProperty('--tg-theme-bg-color', '#ffffff');
+                root.setProperty('--tg-theme-text-color', '#0f172a');
+                root.setProperty('--tg-theme-hint-color', '#64748b');
+                root.setProperty('--tg-theme-button-color', '#2481cc');
+                root.setProperty('--tg-theme-button-text-color', '#ffffff');
+                root.setProperty('--tg-theme-secondary-bg-color', '#f4f4f5');
+            }
+            updateThemeIcons();
+        }
+
+        function updateThemeIcons() {
+            const sun = document.getElementById('themeIconSun');
+            const moon = document.getElementById('themeIconMoon');
+            if (!sun || !moon) return;
+            if (previewDark) {
+                sun.classList.remove('hidden');
+                moon.classList.add('hidden');
+            } else {
+                sun.classList.add('hidden');
+                moon.classList.remove('hidden');
+            }
+        }
+
+        function updateUI() {
+            renderProducts();
+            if (state.isCartOpen) {
+                renderCartDrawer();
+            }
+            syncCheckoutBar();
+        }
+
+        /**
+         * 11. BOOTSTRAP ON LOAD
+         */
+        window.addEventListener('DOMContentLoaded', () => {
+            initTelegramWebApp();
+            renderCategories();
+            renderProducts();
+            syncCheckoutBar();
+
+            // Search Input Listener
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            searchInput.addEventListener('input', (e) => {
+                state.searchQuery = e.target.value;
+                if (state.searchQuery.length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+                renderProducts();
+            });
+        });
+    </script>
+</body>
+</html>
