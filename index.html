@@ -2,1691 +2,2593 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>BT2 Computer</title>
-    
-    <!-- Official Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts: Inter -->
+
+    <!-- Non-blocking Google Fonts for English, Khmer, and Simplified Chinese -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Khmer:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Configure Tailwind to use Telegram CSS Variables with crisp fallbacks -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                    },
-                    colors: {
-                        tg: {
-                            bg: 'var(--tg-theme-bg-color, #ffffff)',
-                            text: 'var(--tg-theme-text-color, #0f172a)',
-                            hint: 'var(--tg-theme-hint-color, #64748b)',
-                            link: 'var(--tg-theme-link-color, #2481cc)',
-                            button: 'var(--tg-theme-button-color, #2481cc)',
-                            buttonText: 'var(--tg-theme-button-text-color, #ffffff)',
-                            secondaryBg: 'var(--tg-theme-secondary-bg-color, #f1f5f9)',
-                            sectionBg: 'var(--tg-theme-section-bg-color, #ffffff)',
-                            destructive: 'var(--tg-theme-destructive-text-color, #ef4444)',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Telegram WebApp SDK (non-blocking, safely guarded in JS) -->
+    <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 
     <style>
-        /* Fallback Root Variables for Browser Preview & Theme Synchronization */
+        /* =====================================================================
+           1. THEME VARIABLES & SELF-CONTAINED DESIGN TOKENS
+           ===================================================================== */
         :root {
             --tg-theme-bg-color: #ffffff;
+            --tg-theme-secondary-bg-color: #f3f4f6;
             --tg-theme-text-color: #0f172a;
             --tg-theme-hint-color: #64748b;
             --tg-theme-link-color: #2481cc;
             --tg-theme-button-color: #2481cc;
             --tg-theme-button-text-color: #ffffff;
-            --tg-theme-secondary-bg-color: #f4f4f5;
+            --tg-theme-header-bg-color: #ffffff;
             --tg-theme-section-bg-color: #ffffff;
             --tg-theme-destructive-text-color: #ef4444;
-            --safe-area-top: env(safe-area-inset-top, 0px);
-            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+
+            --border-subtle: rgba(15, 23, 42, 0.08);
+            --card-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+            --sheet-shadow: 0 -10px 35px rgba(15, 23, 42, 0.18);
+            --accent-soft: rgba(36, 129, 204, 0.12);
+            --success-bg: rgba(16, 185, 129, 0.14);
+            --success-text: #059669;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        /* Support System Dark Mode automatically when outside Telegram */
-        @media (prefers-color-scheme: dark) {
-            :root:not(.tg-initialized) {
-                --tg-theme-bg-color: #18181b;
-                --tg-theme-text-color: #f4f4f5;
-                --tg-theme-hint-color: #a1a1aa;
-                --tg-theme-link-color: #38bdf8;
-                --tg-theme-button-color: #0284c7;
-                --tg-theme-button-text-color: #ffffff;
-                --tg-theme-secondary-bg-color: #27272a;
-                --tg-theme-section-bg-color: #1f1f23;
-            }
+        body.dark-theme {
+            --tg-theme-bg-color: #141619;
+            --tg-theme-secondary-bg-color: #1f2329;
+            --tg-theme-text-color: #f1f5f9;
+            --tg-theme-hint-color: #94a3b8;
+            --tg-theme-link-color: #38bdf8;
+            --tg-theme-button-color: #2ea6ff;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-header-bg-color: #141619;
+            --tg-theme-section-bg-color: #1b1e24;
+            --tg-theme-destructive-text-color: #f87171;
+
+            --border-subtle: rgba(255, 255, 255, 0.09);
+            --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+            --sheet-shadow: 0 -12px 40px rgba(0, 0, 0, 0.55);
+            --accent-soft: rgba(46, 166, 255, 0.16);
+            --success-bg: rgba(16, 185, 129, 0.18);
+            --success-text: #34d399;
         }
 
-        html, body {
+        /* =====================================================================
+           2. RESET & NATURAL DOCUMENT FLOW (ZERO SCROLL TRAPS)
+           ===================================================================== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html {
+            min-height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             background-color: var(--tg-theme-bg-color);
             color: var(--tg-theme-text-color);
-            font-family: 'Inter', sans-serif;
-            min-height: 100dvh;
+            font-family: 'Inter', 'Noto Sans Khmer', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
             overflow-x: hidden;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: contain;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            line-height: 1.45;
             -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
-        /* Prevent accidental text selection on interactive UI chrome while keeping inputs selectable */
-        button, nav, header, .product-card {
-            user-select: none;
-            -webkit-user-select: none;
+        /* Khmer script vertical clearance so subscripts/vowels never clip */
+        html[lang="km"] body {
+            line-height: 1.65;
         }
 
-        /* Smooth horizontal category pills scroll for touch & desktop drag */
-        .category-scroll {
-            display: flex;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            overflow-y: hidden;
-            -webkit-overflow-scrolling: touch;
-            touch-action: pan-x;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            cursor: grab;
-        }
-        .category-scroll:active {
-            cursor: grabbing;
-        }
-        .category-scroll::-webkit-scrollbar {
-            display: none;
+        html[lang="km"] .product-title,
+        html[lang="km"] .product-desc,
+        html[lang="km"] .cat-pill,
+        html[lang="km"] .header-title {
+            line-height: 1.55;
+            padding-top: 1px;
+            padding-bottom: 1px;
         }
 
-        /* Background body scroll lock when bottom sheets are open */
-        body.modal-open {
-            position: fixed;
-            left: 0;
-            right: 0;
-            width: 100%;
-            overflow: hidden;
+        button, input {
+            font-family: inherit;
         }
 
-        /* Smooth Bottom Sheet Transitions & Internal Scroll Containers */
-        .bottom-sheet-backdrop {
-            transition: opacity 0.28s cubic-bezier(0.32, 0.72, 0, 1);
-            touch-action: none;
-        }
-        .bottom-sheet-panel {
-            transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1);
-            max-height: 88dvh;
-            display: flex;
-            flex-direction: column;
-        }
-        .bottom-sheet-scroll {
-            flex: 1 1 auto;
-            min-height: 0;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-        }
-        .bottom-sheet-footer {
-            flex-shrink: 0;
-            padding-bottom: max(0.85rem, var(--safe-area-bottom));
+        button {
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: inherit;
+            padding: 0;
         }
 
-        /* Subtle card tap feedback */
-        .tap-scale {
-            transition: transform 0.14s cubic-bezier(0.2, 0, 0, 1);
+        .tap-active {
+            transition: transform 0.12s ease, opacity 0.15s ease, background-color 0.15s ease;
         }
-        .tap-scale:active {
+        .tap-active:active {
             transform: scale(0.96);
         }
 
-        /* Safe area utilities */
-        .pt-safe {
-            padding-top: max(0.75rem, var(--safe-area-top));
+        .hidden {
+            display: none !important;
         }
-        .pb-safe-footer {
-            padding-bottom: calc(96px + var(--safe-area-bottom));
+
+        /* =====================================================================
+           3. STICKY HEADER, LANGUAGE SWITCHER, SEARCH & CATEGORY PILLS
+           ===================================================================== */
+        .app-header {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            background-color: var(--tg-theme-header-bg-color);
+            border-bottom: 1px solid var(--border-subtle);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
-        .pb-safe-bar {
-            padding-bottom: max(0.75rem, var(--safe-area-bottom));
+
+        .header-inner {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 10px 14px 12px;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .brand-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--tg-theme-button-color), #1d4ed8);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(36, 129, 204, 0.25);
+        }
+
+        .brand-text {
+            min-width: 0;
+        }
+
+        .brand-title-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-title {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .verified-pill {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: var(--success-bg);
+            color: var(--success-text);
+            flex-shrink: 0;
+        }
+
+        .header-subtitle {
+            margin: 1px 0 0;
+            font-size: 11px;
+            color: var(--tg-theme-hint-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        /* Segmented Language Switcher */
+        .lang-group {
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--tg-theme-secondary-bg-color);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 2px;
+        }
+
+        .lang-btn {
+            padding: 5px 8px;
+            border-radius: 9px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--tg-theme-hint-color);
+            line-height: 1.2;
+        }
+
+        .lang-btn.active {
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Theme & Cart Quick Buttons */
+        .icon-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            background-color: var(--tg-theme-secondary-bg-color);
+            border: 1px solid var(--border-subtle);
+            color: var(--tg-theme-text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .cart-badge-dot {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 17px;
+            height: 17px;
+            padding: 0 4px;
+            border-radius: 999px;
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            font-size: 10px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--tg-theme-bg-color);
+        }
+
+        /* Search Bar */
+        .search-box {
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--tg-theme-hint-color);
+            pointer-events: none;
+            display: flex;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 38px;
+            padding: 0 36px 0 36px;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            background-color: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .search-input::placeholder {
+            color: var(--tg-theme-hint-color);
+        }
+
+        .search-input:focus {
+            border-color: var(--tg-theme-button-color);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        .clear-search-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            color: var(--tg-theme-hint-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Horizontal Scrollable Category Pills */
+        .category-strip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            touch-action: pan-x;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .category-strip::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cat-pill {
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            background-color: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
+            border: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        .cat-pill.active {
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border-color: var(--tg-theme-button-color);
+            font-weight: 700;
+        }
+
+        /* =====================================================================
+           4. MAIN CONTENT, PROMO BANNER & RESPONSIVE PRODUCT GRID
+           ===================================================================== */
+        .main-container {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 14px 14px calc(104px + var(--safe-bottom));
+        }
+
+        .promo-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background-color: var(--tg-theme-secondary-bg-color);
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 16px;
+        }
+
+        .promo-tag {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 2px 7px;
+            border-radius: 6px;
+            background-color: var(--accent-soft);
+            color: var(--tg-theme-button-color);
+            margin-bottom: 4px;
+        }
+
+        .promo-copy {
+            margin: 0;
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        .promo-code-link {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-weight: 800;
+            color: var(--tg-theme-button-color);
+            text-decoration: underline;
+        }
+
+        .promo-copy-btn {
+            padding: 8px 12px;
+            border-radius: 11px;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            border: 1px solid var(--border-subtle);
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .section-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .section-count {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--tg-theme-hint-color);
+        }
+
+        /* 2 Columns on Mobile, 3 Columns on Tablet, 4 Columns on Desktop */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 11px;
+        }
+
+        @media (min-width: 640px) {
+            .product-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 14px;
+            }
+        }
+
+        @media (min-width: 960px) {
+            .product-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 16px;
+            }
+        }
+
+        .product-card {
+            background-color: var(--tg-theme-section-bg-color);
+            border: 1px solid var(--border-subtle);
+            border-radius: 18px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-thumb {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .card-thumb svg {
+            width: 58%;
+            height: 58%;
+            max-width: 112px;
+            max-height: 112px;
+            transition: transform 0.25s ease;
+        }
+
+        .product-card:hover .card-thumb svg {
+            transform: scale(1.06);
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            padding: 3px 7px;
+            border-radius: 7px;
+            font-size: 10px;
+            font-weight: 700;
+            background-color: rgba(15, 23, 42, 0.72);
+            color: #ffffff;
+            backdrop-filter: blur(4px);
+        }
+
+        .card-rating {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            background-color: rgba(0, 0, 0, 0.55);
+            color: #fbbf24;
+        }
+
+        .card-body {
+            padding: 10px 11px 6px;
+        }
+
+        .product-title {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-desc {
+            margin: 4px 0 0;
+            font-size: 11.5px;
+            color: var(--tg-theme-hint-color);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-footer {
+            padding: 8px 11px 11px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .product-price {
+            font-size: 14.5px;
+            font-weight: 800;
+        }
+
+        .add-btn {
+            height: 32px;
+            padding: 0 11px;
+            border-radius: 10px;
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .qty-stepper {
+            height: 32px;
+            padding: 0 4px;
+            border-radius: 10px;
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .stepper-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 7px;
+            background-color: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stepper-val {
+            font-size: 12px;
+            font-weight: 800;
+            min-width: 14px;
+            text-align: center;
+        }
+
+        /* Empty Search State */
+        .empty-state {
+            text-align: center;
+            padding: 48px 16px;
+            background-color: var(--tg-theme-secondary-bg-color);
+            border-radius: 20px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .empty-state h3 {
+            margin: 10px 0 4px;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .empty-state p {
+            margin: 0 0 16px;
+            font-size: 12.5px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .primary-pill-btn {
+            padding: 10px 18px;
+            border-radius: 12px;
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* =====================================================================
+           5. STICKY BOTTOM CHECKOUT BAR (BROWSER & PREVIEW FALLBACK)
+           ===================================================================== */
+        .sticky-checkout-bar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 35;
+            padding: 10px 14px calc(12px + var(--safe-bottom));
+            background-color: var(--tg-theme-bg-color);
+            border-top: 1px solid var(--border-subtle);
+            box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.08);
+        }
+
+        .sticky-checkout-inner {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .checkout-trigger-btn {
+            width: 100%;
+            height: 48px;
+            padding: 0 16px;
+            border-radius: 14px;
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            font-size: 14px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 6px 16px rgba(36, 129, 204, 0.28);
+        }
+
+        .checkout-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkout-count-pill {
+            background-color: rgba(255, 255, 255, 0.22);
+            padding: 3px 9px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        /* =====================================================================
+           6. MODALS & BOTTOM SHEETS (ZERO BACKGROUND INTERFERENCE WHEN CLOSED)
+           ===================================================================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal-overlay.center-modal {
+            align-items: center;
+            padding: 16px;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.58);
+            backdrop-filter: blur(3px);
+        }
+
+        .bottom-sheet {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 560px;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            border-radius: 24px 24px 0 0;
+            box-shadow: var(--sheet-shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: sheetSlideUp 0.22s ease-out;
+        }
+
+        @keyframes sheetSlideUp {
+            from { transform: translateY(36px); opacity: 0.6; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .sheet-header {
+            padding: 10px 16px 12px;
+            border-bottom: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        .sheet-drag-pill {
+            width: 38px;
+            height: 4px;
+            border-radius: 999px;
+            background-color: var(--tg-theme-hint-color);
+            opacity: 0.35;
+            margin: 0 auto 10px;
+        }
+
+        .sheet-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .sheet-scroll-body {
+            overflow-y: auto;
+            max-height: 75vh;
+            -webkit-overflow-scrolling: touch;
+            padding: 14px 16px;
+        }
+
+        .sheet-footer {
+            padding: 12px 16px calc(14px + var(--safe-bottom));
+            border-top: 1px solid var(--border-subtle);
+            background-color: var(--tg-theme-bg-color);
+            flex-shrink: 0;
+        }
+
+        /* Product Detail Sheet Specifics */
+        .detail-hero {
+            width: 100%;
+            height: 175px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 14px;
+        }
+
+        .detail-hero svg {
+            width: 112px;
+            height: 112px;
+        }
+
+        .detail-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .detail-cat {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--tg-theme-button-color);
+        }
+
+        .detail-title {
+            margin: 0 0 6px;
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .detail-price {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--tg-theme-button-color);
+            margin-bottom: 10px;
+        }
+
+        .detail-desc {
+            margin: 0 0 16px;
+            font-size: 13px;
+            color: var(--tg-theme-hint-color);
+            line-height: 1.55;
+        }
+
+        .option-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--tg-theme-hint-color);
+            margin-bottom: 8px;
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .option-pill {
+            padding: 9px 8px;
+            border-radius: 11px;
+            background-color: var(--tg-theme-secondary-bg-color);
+            border: 1.5px solid transparent;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .option-pill.selected {
+            background-color: var(--accent-soft);
+            border-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-color);
+            font-weight: 800;
+        }
+
+        .detail-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-qty-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--tg-theme-secondary-bg-color);
+            border-radius: 13px;
+            padding: 4px;
+            width: 116px;
+            flex-shrink: 0;
+        }
+
+        .modal-qty-btn {
+            width: 34px;
+            height: 36px;
+            border-radius: 10px;
+            background-color: var(--tg-theme-bg-color);
+            font-size: 16px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .modal-add-cta {
+            flex: 1;
+            height: 44px;
+            padding: 0 14px;
+            border-radius: 13px;
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            font-size: 13.5px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* Cart & Checkout Sheet Specifics */
+        .cart-item-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 15px;
+            background-color: var(--tg-theme-secondary-bg-color);
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 10px;
+        }
+
+        .cart-item-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .cart-item-thumb svg {
+            width: 30px;
+            height: 30px;
+        }
+
+        .cart-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .cart-item-title {
+            margin: 0;
+            font-size: 12.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .cart-item-opt {
+            margin: 1px 0 3px;
+            font-size: 11px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .cart-item-price {
+            margin: 0;
+            font-size: 12.5px;
+            font-weight: 800;
+            color: var(--tg-theme-button-color);
+        }
+
+        .cart-row-stepper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: var(--tg-theme-bg-color);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .cart-row-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            background-color: var(--tg-theme-secondary-bg-color);
+            font-size: 14px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fulfillment-switch {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+            padding: 4px;
+            border-radius: 13px;
+            background-color: var(--tg-theme-secondary-bg-color);
+            margin: 14px 0 12px;
+        }
+
+        .fulfillment-btn {
+            padding: 9px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .fulfillment-btn.active {
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            font-weight: 800;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .sheet-input {
+            width: 100%;
+            height: 40px;
+            padding: 0 12px;
+            border-radius: 11px;
+            border: 1px solid var(--border-subtle);
+            background-color: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
+            font-size: 12.5px;
+            outline: none;
+        }
+
+        .sheet-input:focus {
+            border-color: var(--tg-theme-button-color);
+        }
+
+        .promo-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .promo-apply-btn {
+            padding: 0 16px;
+            height: 40px;
+            border-radius: 11px;
+            background-color: var(--accent-soft);
+            color: var(--tg-theme-button-color);
+            font-size: 12.5px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .promo-msg {
+            margin: 0 0 10px;
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+        .summary-card {
+            padding: 12px 14px;
+            border-radius: 15px;
+            background-color: var(--tg-theme-secondary-bg-color);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            font-size: 12.5px;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .summary-line strong {
+            color: var(--tg-theme-text-color);
+        }
+
+        .summary-discount {
+            color: var(--success-text);
+            font-weight: 700;
+        }
+
+        .summary-total {
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 8px;
+            margin-top: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .summary-total span:last-child {
+            color: var(--tg-theme-button-color);
+            font-size: 17px;
+        }
+
+        /* Confirmation Card */
+        .confirm-card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 380px;
+            background-color: var(--tg-theme-bg-color);
+            border-radius: 24px;
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: var(--sheet-shadow);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .confirm-check {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--success-bg);
+            color: var(--success-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+        }
+
+        .order-id-chip {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background-color: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-hint-color);
+            font-family: ui-monospace, monospace;
+            font-size: 11.5px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        /* Toast Notification */
+        .toast-banner {
+            position: fixed;
+            top: 72px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 60;
+            background-color: #0f172a;
+            color: #ffffff;
+            padding: 9px 16px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            white-space: nowrap;
+            max-width: 92vw;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col antialiased selection:bg-tg-button selection:text-tg-buttonText">
+<body>
 
-    <!-- ===================================================================== -->
-    <!-- STICKY COMPACT HEADER: Store Title, Search Input & Category Pills     -->
-    <!-- ===================================================================== -->
-    <header class="sticky top-0 z-30 bg-tg-bg/95 backdrop-blur-md border-b border-black/5 dark:border-white/5 pt-safe transition-colors duration-200">
-        <div class="max-w-2xl mx-auto px-3.5 pb-2.5">
-            
-            <!-- Top Bar: Brand Identity + Theme Toggle (Browser Preview Helper) & Cart Badge -->
-            <div class="flex items-center justify-between gap-2 mb-2.5">
-                <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-9 h-9 rounded-xl bg-tg-button text-tg-buttonText flex items-center justify-center font-extrabold text-base shadow-sm shrink-0">
-                        K&amp;B
+    <!-- =====================================================================
+         TOAST NOTIFICATION
+         ===================================================================== -->
+    <div id="toastBanner" class="toast-banner hidden"></div>
+
+    <!-- =====================================================================
+         STICKY HEADER (BRAND, LANG SWITCHER, THEME TOGGLE, SEARCH, CATEGORIES)
+         ===================================================================== -->
+    <header class="app-header">
+        <div class="header-inner">
+            <div class="top-bar">
+                <div class="brand-wrap">
+                    <div class="brand-logo" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="4" width="16" height="16" rx="3"></rect>
+                            <path d="M9 9h6v6H9z"></path>
+                            <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path>
+                        </svg>
                     </div>
-                    <div class="truncate">
-                        <div class="flex items-center gap-1.5">
-                            <h1 class="text-base font-bold tracking-tight truncate">Kova &amp; Bean</h1>
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                                Open
-                            </span>
+                    <div class="brand-text">
+                        <div class="brand-title-row">
+                            <h1 id="storeTitle" class="header-title">Tech &amp; Gadget Store</h1>
+                            <span id="officialBadge" class="verified-pill">Official</span>
                         </div>
-                        <p class="text-[11px] text-tg-hint truncate">Specialty Roastery &amp; Bakery • 15–25 min</p>
+                        <p id="storeSubtitle" class="header-subtitle">Audio, Computers &amp; Smart Gear • Fast Delivery</p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-1.5 shrink-0">
-                    <!-- Preview Theme Switcher (Visible when outside Telegram or for quick testing) -->
-                    <button id="themeToggleBtn" onclick="togglePreviewTheme()" aria-label="Toggle theme" class="p-2 rounded-xl bg-tg-secondaryBg text-tg-text tap-scale flex items-center justify-center" title="Switch Light/Dark Preview">
-                        <svg id="themeIconSun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <div class="header-controls">
+                    <!-- Segmented Trilingual Switcher -->
+                    <div class="lang-group" role="group" aria-label="Language Switcher">
+                        <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
+                        <button type="button" class="lang-btn" data-lang="km" onclick="setLanguage('km')">ខ្មែរ</button>
+                        <button type="button" class="lang-btn" data-lang="zh" onclick="setLanguage('zh')">中文</button>
+                    </div>
+
+                    <!-- Light / Dark Theme Toggle -->
+                    <button type="button" id="themeToggleBtn" class="icon-btn tap-active" onclick="toggleTheme()" aria-label="Toggle Light/Dark Theme">
+                        <svg id="sunIcon" class="hidden" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="4"></circle>
-                            <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+                            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
                         </svg>
-                        <svg id="themeIconMoon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <svg id="moonIcon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
                         </svg>
                     </button>
 
-                    <!-- Quick Cart Trigger Button -->
-                    <button onclick="openCartDrawer()" aria-label="Open Cart" class="relative p-2 rounded-xl bg-tg-secondaryBg text-tg-text tap-scale flex items-center gap-1.5 px-2.5">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    <!-- Header Cart Shortcut -->
+                    <button type="button" class="icon-btn tap-active" onclick="openCartDrawer()" aria-label="Open Cart">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="8" cy="21" r="1"></circle>
+                            <circle cx="19" cy="21" r="1"></circle>
+                            <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
                         </svg>
-                        <span id="headerCartCount" class="text-xs font-bold">0</span>
+                        <span id="headerCartBadge" class="cart-badge-dot">0</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Compact Search Bar -->
-            <div class="relative mb-2.5">
-                <svg class="w-4 h-4 text-tg-hint absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path stroke-linecap="round" d="m21 21-4.3-4.3"></path>
-                </svg>
-                <input 
-                    id="searchInput" 
-                    type="search" 
-                    placeholder="Search espresso, pastries, beans..." 
-                    class="w-full bg-tg-secondaryBg text-tg-text placeholder-tg-hint text-sm rounded-xl pl-9 pr-8 py-2 outline-none focus:ring-2 focus:ring-tg-button/50 transition-all"
-                >
-                <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-tg-hint hover:text-tg-text">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <!-- Search Input -->
+            <div class="search-box">
+                <span class="search-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path stroke-linecap="round" d="m21 21-4.3-4.3"></path>
+                    </svg>
+                </span>
+                <input id="searchInput" class="search-input" type="search" placeholder="Search headphones, laptops, smartwatches, chargers..." autocomplete="off">
+                <button type="button" id="clearSearchBtn" class="clear-search-btn hidden" onclick="clearSearch()" aria-label="Clear search">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" d="M18 6 6 18M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
 
-            <!-- Horizontal Scroll Category Filter Pills -->
-            <nav id="categoryBar" class="category-scroll items-center gap-1.5 py-0.5" aria-label="Product Categories">
-                <!-- Dynamically rendered by JS -->
-            </nav>
+            <!-- Category Pills -->
+            <nav id="categoryStrip" class="category-strip" aria-label="Product Categories"></nav>
         </div>
     </header>
 
-    <!-- ===================================================================== -->
-    <!-- MAIN CONTENT: Featured Promo Banner + 2-Column Product Grid           -->
-    <!-- ===================================================================== -->
-    <main class="flex-1 w-full max-w-2xl mx-auto px-3.5 pt-3 pb-safe-footer">
-        
-        <!-- Compact Promo Banner -->
-        <div id="promoBanner" class="mb-3.5 rounded-2xl bg-tg-secondaryBg p-3 flex items-center justify-between gap-3 border border-black/5 dark:border-white/5">
-            <div class="min-w-0">
-                <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-tg-button/15 text-tg-button mb-1">
-                    Telegram Exclusive
-                </span>
-                <p class="text-xs font-semibold leading-snug">
-                    Use code <button onclick="copyPromoCode('TG15')" class="font-mono font-bold underline decoration-tg-button text-tg-button">TG15</button> for 15% off your order
+    <!-- =====================================================================
+         MAIN CATALOG CONTENT
+         ===================================================================== -->
+    <main class="main-container">
+        <!-- Promo Banner -->
+        <section class="promo-banner">
+            <div>
+                <span id="promoTag" class="promo-tag">Telegram Mini App Special</span>
+                <p id="promoCopy" class="promo-copy">
+                    Use code <button type="button" class="promo-code-link" onclick="copyPromoCode('TG15')">TG15</button> at checkout for 15% off your entire order
                 </p>
             </div>
-            <button onclick="copyPromoCode('TG15')" class="shrink-0 px-3 py-1.5 rounded-xl bg-tg-bg text-tg-text text-xs font-semibold shadow-sm border border-black/5 dark:border-white/10 tap-scale">
-                Copy
-            </button>
-        </div>
+            <button type="button" id="promoCopyBtn" class="promo-copy-btn tap-active" onclick="copyPromoCode('TG15')">Copy</button>
+        </section>
 
         <!-- Section Header -->
-        <div class="flex items-center justify-between mb-2.5">
-            <h2 id="sectionHeading" class="text-sm font-bold tracking-tight">All Menu Items</h2>
-            <span id="itemCountLabel" class="text-xs text-tg-hint font-medium">8 items</span>
+        <div class="section-bar">
+            <h2 id="sectionHeading" class="section-title">All Products</h2>
+            <span id="sectionCount" class="section-count">8 items</span>
         </div>
 
-        <!-- 2-Column Responsive Product Grid -->
-        <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
-            <!-- Dynamically rendered product cards -->
-        </div>
+        <!-- Product Grid -->
+        <div id="productGrid" class="product-grid"></div>
 
         <!-- Empty Search State -->
-        <div id="emptyState" class="hidden py-14 text-center">
-            <div class="w-12 h-12 rounded-2xl bg-tg-secondaryBg text-tg-hint flex items-center justify-center mx-auto mb-3">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path stroke-linecap="round" d="m21 21-4.3-4.3"></path>
-                </svg>
-            </div>
-            <h3 class="text-sm font-bold mb-1">No matching items found</h3>
-            <p class="text-xs text-tg-hint mb-4">Try clearing your search or switching categories.</p>
-            <button onclick="resetFilters()" class="px-4 py-2 rounded-xl bg-tg-button text-tg-buttonText text-xs font-semibold tap-scale">
-                Reset Filters
-            </button>
+        <div id="emptyState" class="empty-state hidden">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color: var(--tg-theme-hint-color);">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path stroke-linecap="round" d="m21 21-4.3-4.3"></path>
+            </svg>
+            <h3 id="emptyTitle">No matching products found</h3>
+            <p id="emptySubtitle">Try clearing your search or switching categories.</p>
+            <button type="button" id="emptyResetBtn" class="primary-pill-btn tap-active" onclick="resetFilters()">Reset Filters</button>
         </div>
     </main>
 
-    <!-- ===================================================================== -->
-    <!-- FALLBACK STICKY BOTTOM BAR (Shown when outside Telegram or Desktop)   -->
-    <!-- ===================================================================== -->
-    <div id="fallbackBottomBar" class="hidden fixed bottom-0 inset-x-0 z-30 bg-tg-bg/95 backdrop-blur-md border-t border-black/10 dark:border-white/10 px-3.5 pt-2.5 pb-safe-bar transition-all duration-200">
-        <div class="max-w-2xl mx-auto">
-            <button id="fallbackMainBtn" onclick="handleMainButtonClick()" class="w-full py-3.5 px-4 rounded-xl bg-tg-button text-tg-buttonText font-bold text-sm shadow-lg flex items-center justify-between tap-scale">
-                <span class="flex items-center gap-2">
-                    <span id="fallbackBtnBadge" class="px-2 py-0.5 rounded-md bg-black/20 text-xs font-extrabold">0</span>
-                    <span id="fallbackBtnLabel">View Order</span>
+    <!-- =====================================================================
+         STICKY BOTTOM CHECKOUT BAR (FALLBACK WHEN OUTSIDE TELEGRAM MAINBUTTON)
+         ===================================================================== -->
+    <div id="stickyCheckoutBar" class="sticky-checkout-bar hidden">
+        <div class="sticky-checkout-inner">
+            <button type="button" class="checkout-trigger-btn tap-active" onclick="openCartDrawer()">
+                <span class="checkout-left">
+                    <span id="stickyBarCount" class="checkout-count-pill">1</span>
+                    <span id="stickyBarLabel">View Order</span>
                 </span>
-                <span id="fallbackBtnTotal" class="font-extrabold">$0.00</span>
+                <span id="stickyBarTotal">$0.00</span>
             </button>
         </div>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- SLIDE-UP PRODUCT DETAIL BOTTOM SHEET                                  -->
-    <!-- ===================================================================== -->
-    <div id="productModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
-        <!-- Backdrop -->
-        <div id="productModalBackdrop" onclick="closeProductModal()" class="bottom-sheet-backdrop fixed inset-0 bg-black/55 opacity-0"></div>
-        
-        <!-- Sheet Panel -->
-        <div id="productModalPanel" class="bottom-sheet-panel fixed inset-x-0 bottom-0 max-w-2xl mx-auto bg-tg-bg rounded-t-3xl shadow-2xl transform translate-y-full overflow-hidden">
-            <!-- Drag Handle (Pinned Header) -->
-            <div class="w-full flex justify-center pt-2.5 pb-1.5 shrink-0 cursor-pointer" onclick="closeProductModal()">
-                <div class="w-10 h-1 rounded-full bg-tg-hint/30"></div>
-            </div>
-
-            <!-- Scrollable Content Body -->
-            <div class="bottom-sheet-scroll px-4 pb-4 space-y-4">
-                <!-- Product Hero Image -->
-                <div class="relative aspect-[16/10] w-full rounded-2xl overflow-hidden bg-tg-secondaryBg">
-                    <img id="modalImg" src="" alt="" class="w-full h-full object-cover">
-                    <span id="modalBadge" class="hidden absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold bg-tg-bg/90 text-tg-text backdrop-blur-sm shadow-sm"></span>
-                    <button onclick="closeProductModal()" aria-label="Close" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm tap-scale">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+    <!-- =====================================================================
+         PRODUCT DETAIL BOTTOM SHEET MODAL
+         ===================================================================== -->
+    <div id="productModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+        <div class="modal-backdrop" onclick="closeProductModal()"></div>
+        <div class="bottom-sheet">
+            <div class="sheet-header">
+                <div class="sheet-drag-pill" onclick="closeProductModal()"></div>
+                <div class="sheet-header-row">
+                    <span id="modalCatLabel" class="detail-cat">Audio &amp; Speakers</span>
+                    <button type="button" class="icon-btn tap-active" onclick="closeProductModal()" aria-label="Close">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" d="M18 6 6 18M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
-
-                <!-- Title & Price -->
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <span id="modalCategory" class="text-[11px] font-semibold uppercase tracking-wider text-tg-button"></span>
-                        <h3 id="modalTitle" class="text-lg font-extrabold leading-tight mt-0.5"></h3>
-                    </div>
-                    <div id="modalPrice" class="text-lg font-extrabold text-tg-button shrink-0"></div>
-                </div>
-
-                <!-- Description -->
-                <p id="modalDesc" class="text-xs sm:text-sm text-tg-hint leading-relaxed"></p>
-
-                <!-- Optional Customization / Size Selector -->
-                <div id="modalOptionsWrapper" class="space-y-2 pt-1">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-tg-hint">Select Option</label>
-                    <div id="modalOptionsList" class="grid grid-cols-3 gap-2">
-                        <!-- Option pills injected via JS -->
-                    </div>
-                </div>
             </div>
 
-            <!-- Pinned Quantity & Add Action Bar -->
-            <div class="bottom-sheet-footer px-4 pt-3 border-t border-black/5 dark:border-white/5 bg-tg-bg flex items-center gap-3">
-                <div class="flex items-center justify-between bg-tg-secondaryBg rounded-xl p-1 w-32 shrink-0">
-                    <button onclick="adjustModalQty(-1)" class="w-9 h-9 rounded-lg bg-tg-bg text-tg-text font-bold text-base flex items-center justify-center shadow-sm tap-scale">−</button>
-                    <span id="modalQtyValue" class="font-bold text-sm">1</span>
-                    <button onclick="adjustModalQty(1)" class="w-9 h-9 rounded-lg bg-tg-bg text-tg-text font-bold text-base flex items-center justify-center shadow-sm tap-scale">+</button>
+            <div class="sheet-scroll-body">
+                <div id="modalHeroArt" class="detail-hero"></div>
+                <div class="detail-meta-row">
+                    <span id="modalBadgePill" class="verified-pill">Bestseller</span>
+                    <span id="modalRatingText" style="font-size: 12px; font-weight: 700; color: #f59e0b;">★ 4.9</span>
                 </div>
+                <h3 id="modalTitle" class="detail-title">Product Title</h3>
+                <div id="modalPrice" class="detail-price">$0.00</div>
+                <p id="modalDesc" class="detail-desc">Product description</p>
 
-                <button id="modalAddBtn" onclick="confirmModalAdd()" class="flex-1 py-3.5 px-4 rounded-xl bg-tg-button text-tg-buttonText font-bold text-sm shadow-md flex items-center justify-center gap-2 tap-scale">
-                    <span>Add to Order</span>
-                    <span>•</span>
-                    <span id="modalBtnPrice">$0.00</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===================================================================== -->
-    <!-- SLIDE-UP CART & CHECKOUT DRAWER                                       -->
-    <!-- ===================================================================== -->
-    <div id="cartDrawer" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
-        <!-- Backdrop -->
-        <div id="cartDrawerBackdrop" onclick="closeCartDrawer()" class="bottom-sheet-backdrop fixed inset-0 bg-black/55 opacity-0"></div>
-        
-        <!-- Drawer Panel -->
-        <div id="cartDrawerPanel" class="bottom-sheet-panel fixed inset-x-0 bottom-0 max-w-2xl mx-auto bg-tg-bg rounded-t-3xl shadow-2xl transform translate-y-full overflow-hidden">
-            <!-- Pinned Handle & Header -->
-            <div class="px-4 pt-2.5 pb-3 border-b border-black/5 dark:border-white/5 shrink-0">
-                <div class="w-10 h-1 rounded-full bg-tg-hint/30 mx-auto mb-2.5 cursor-pointer" onclick="closeCartDrawer()"></div>
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-base font-extrabold">Your Order</h3>
-                        <p id="cartDrawerSubtitle" class="text-xs text-tg-hint">Review items before checkout</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button id="clearCartBtn" onclick="clearCart()" class="text-xs font-semibold text-tg-destructive px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 tap-scale">
-                            Clear
-                        </button>
-                        <button onclick="closeCartDrawer()" aria-label="Close Cart" class="w-8 h-8 rounded-full bg-tg-secondaryBg text-tg-text flex items-center justify-center tap-scale">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" d="M18 6 6 18M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Scrollable Cart Body -->
-            <div id="cartDrawerScrollBody" class="bottom-sheet-scroll px-4 py-3 space-y-4">
-                
-                <!-- Cart Item List -->
-                <div id="cartItemsContainer" class="space-y-2.5">
-                    <!-- Dynamically rendered cart rows -->
-                </div>
-
-                <!-- Delivery / Pickup Toggle -->
-                <div class="bg-tg-secondaryBg p-1 rounded-xl grid grid-cols-2 gap-1">
-                    <button id="modeDeliveryBtn" onclick="setFulfillmentMode('delivery')" class="py-2 rounded-lg text-xs font-bold bg-tg-bg text-tg-text shadow-sm transition-all">
-                        🛵 Express Delivery ($2.50)
-                    </button>
-                    <button id="modePickupBtn" onclick="setFulfillmentMode('pickup')" class="py-2 rounded-lg text-xs font-semibold text-tg-hint transition-all">
-                        🏪 Store Pickup (Free)
-                    </button>
-                </div>
-
-                <!-- Order Note Input -->
                 <div>
-                    <input 
-                        id="orderNoteInput" 
-                        type="text" 
-                        placeholder="Add note for barista / courier (e.g. extra hot, gate code)..." 
-                        class="sheet-focus-input w-full bg-tg-secondaryBg text-tg-text placeholder-tg-hint text-xs rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-tg-button/50"
-                    >
-                </div>
-
-                <!-- Promo Code Input -->
-                <div class="flex items-center gap-2">
-                    <input 
-                        id="promoInput" 
-                        type="text" 
-                        placeholder="Promo code (try TG15)" 
-                        class="sheet-focus-input flex-1 bg-tg-secondaryBg text-tg-text placeholder-tg-hint text-xs uppercase rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-tg-button/50"
-                    >
-                    <button onclick="applyPromoCode()" class="px-4 py-2.5 rounded-xl bg-tg-secondaryBg text-tg-button font-bold text-xs border border-tg-button/20 tap-scale">
-                        Apply
-                    </button>
-                </div>
-                <p id="promoFeedback" class="hidden text-xs font-medium -mt-2"></p>
-
-                <!-- Order Summary Breakdown -->
-                <div class="bg-tg-secondaryBg rounded-2xl p-3.5 space-y-2 text-xs">
-                    <div class="flex justify-between text-tg-hint">
-                        <span>Subtotal</span>
-                        <span id="summarySubtotal" class="font-semibold text-tg-text">$0.00</span>
-                    </div>
-                    <div id="summaryDiscountRow" class="hidden flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
-                        <span>Discount (<span id="summaryPromoLabel">TG15</span>)</span>
-                        <span id="summaryDiscount">-$0.00</span>
-                    </div>
-                    <div class="flex justify-between text-tg-hint">
-                        <span id="summaryFeeLabel">Express Delivery</span>
-                        <span id="summaryFee" class="font-semibold text-tg-text">$2.50</span>
-                    </div>
-                    <div class="border-t border-black/10 dark:border-white/10 pt-2 flex justify-between items-center text-sm font-extrabold">
-                        <span>Total</span>
-                        <span id="summaryTotal" class="text-tg-button text-base">$0.00</span>
-                    </div>
+                    <label id="modalOptLabel" class="option-label">Select Option</label>
+                    <div id="modalOptionGrid" class="option-grid"></div>
                 </div>
             </div>
 
-            <!-- Pinned Browser Fallback Checkout Footer -->
-            <div id="drawerFallbackCheckoutWrap" class="bottom-sheet-footer px-4 pt-3 border-t border-black/5 dark:border-white/5 bg-tg-bg">
-                <button onclick="processCheckout()" class="w-full py-3.5 px-4 rounded-xl bg-tg-button text-tg-buttonText font-bold text-sm shadow-lg flex items-center justify-center gap-2 tap-scale">
-                    <span>Place Order</span>
-                    <span>•</span>
-                    <span id="drawerFallbackTotal">$0.00</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===================================================================== -->
-    <!-- SLIDE-UP CART & CHECKOUT DRAWER                                       -->
-    <!-- ===================================================================== -->
-    <div id="cartDrawer" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
-        <!-- Backdrop -->
-        <div id="cartDrawerBackdrop" onclick="closeCartDrawer()" class="bottom-sheet-backdrop fixed inset-0 bg-black/55 opacity-0"></div>
-        
-        <!-- Drawer Panel -->
-        <div id="cartDrawerPanel" class="bottom-sheet-panel fixed inset-x-0 bottom-0 max-w-2xl mx-auto bg-tg-bg rounded-t-3xl shadow-2xl transform translate-y-full flex flex-col max-h-[90vh]">
-            <!-- Handle & Header -->
-            <div class="px-4 pt-2.5 pb-3 border-b border-black/5 dark:border-white/5 shrink-0">
-                <div class="w-10 h-1 rounded-full bg-tg-hint/30 mx-auto mb-2.5" onclick="closeCartDrawer()"></div>
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-base font-extrabold">Your Order</h3>
-                        <p id="cartDrawerSubtitle" class="text-xs text-tg-hint">Review items before checkout</p>
+            <div class="sheet-footer">
+                <div class="detail-actions">
+                    <div class="modal-qty-box">
+                        <button type="button" class="modal-qty-btn tap-active" onclick="changeModalQty(-1)">−</button>
+                        <span id="modalQtyVal" style="font-size: 14px; font-weight: 800;">1</span>
+                        <button type="button" class="modal-qty-btn tap-active" onclick="changeModalQty(1)">+</button>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button id="clearCartBtn" onclick="clearCart()" class="text-xs font-semibold text-tg-destructive px-2.5 py-1.5 rounded-lg hover:bg-red-500/10 tap-scale">
-                            Clear
-                        </button>
-                        <button onclick="closeCartDrawer()" aria-label="Close Cart" class="w-8 h-8 rounded-full bg-tg-secondaryBg text-tg-text flex items-center justify-center tap-scale">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" d="M18 6 6 18M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Scrollable Cart Body -->
-            <div class="flex-1 overflow-y-auto px-4 py-3 space-y-4">
-                
-                <!-- Cart Item List -->
-                <div id="cartItemsContainer" class="space-y-2.5">
-                    <!-- Dynamically rendered cart rows -->
-                </div>
-
-                <!-- Delivery / Pickup Toggle -->
-                <div class="bg-tg-secondaryBg p-1 rounded-xl grid grid-cols-2 gap-1">
-                    <button id="modeDeliveryBtn" onclick="setFulfillmentMode('delivery')" class="py-2 rounded-lg text-xs font-bold bg-tg-bg text-tg-text shadow-sm transition-all">
-                        🛵 Express Delivery ($2.50)
-                    </button>
-                    <button id="modePickupBtn" onclick="setFulfillmentMode('pickup')" class="py-2 rounded-lg text-xs font-semibold text-tg-hint transition-all">
-                        🏪 Store Pickup (Free)
-                    </button>
-                </div>
-
-                <!-- Order Note Input -->
-                <div>
-                    <input 
-                        id="orderNoteInput" 
-                        type="text" 
-                        placeholder="Add note for barista / courier (e.g. extra hot, gate code)..." 
-                        class="w-full bg-tg-secondaryBg text-tg-text placeholder-tg-hint text-xs rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-tg-button/50"
-                    >
-                </div>
-
-                <!-- Promo Code Input -->
-                <div class="flex items-center gap-2">
-                    <input 
-                        id="promoInput" 
-                        type="text" 
-                        placeholder="Promo code (try TG15)" 
-                        class="flex-1 bg-tg-secondaryBg text-tg-text placeholder-tg-hint text-xs uppercase rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-tg-button/50"
-                    >
-                    <button onclick="applyPromoCode()" class="px-4 py-2.5 rounded-xl bg-tg-secondaryBg text-tg-button font-bold text-xs border border-tg-button/20 tap-scale">
-                        Apply
-                    </button>
-                </div>
-                <p id="promoFeedback" class="hidden text-xs font-medium -mt-2"></p>
-
-                <!-- Order Summary Breakdown -->
-                <div class="bg-tg-secondaryBg rounded-2xl p-3.5 space-y-2 text-xs">
-                    <div class="flex justify-between text-tg-hint">
-                        <span>Subtotal</span>
-                        <span id="summarySubtotal" class="font-semibold text-tg-text">$0.00</span>
-                    </div>
-                    <div id="summaryDiscountRow" class="hidden flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
-                        <span>Discount (<span id="summaryPromoLabel">TG15</span>)</span>
-                        <span id="summaryDiscount">-$0.00</span>
-                    </div>
-                    <div class="flex justify-between text-tg-hint">
-                        <span id="summaryFeeLabel">Express Delivery</span>
-                        <span id="summaryFee" class="font-semibold text-tg-text">$2.50</span>
-                    </div>
-                    <div class="border-t border-black/10 dark:border-white/10 pt-2 flex justify-between items-center text-sm font-extrabold">
-                        <span>Total</span>
-                        <span id="summaryTotal" class="text-tg-button text-base">$0.00</span>
-                    </div>
-                </div>
-
-                <!-- Browser Fallback Checkout Button inside Drawer -->
-                <div id="drawerFallbackCheckoutWrap" class="pt-1">
-                    <button onclick="processCheckout()" class="w-full py-3.5 px-4 rounded-xl bg-tg-button text-tg-buttonText font-bold text-sm shadow-lg flex items-center justify-center gap-2 tap-scale">
-                        <span>Place Order</span>
+                    <button type="button" class="modal-add-cta tap-active" onclick="addModalProductToCart()">
+                        <span id="modalAddLabel">Add to Cart</span>
                         <span>•</span>
-                        <span id="drawerFallbackTotal">$0.00</span>
+                        <span id="modalAddSum">$0.00</span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- ORDER CONFIRMATION SUCCESS MODAL                                      -->
-    <!-- ===================================================================== -->
-    <div id="confirmationModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-xs"></div>
-        <div class="relative bg-tg-bg rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-black/5 dark:border-white/10 space-y-4">
-            <div class="w-16 h-16 rounded-full bg-emerald-500/15 text-emerald-500 flex items-center justify-center mx-auto">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+    <!-- =====================================================================
+         CART & CHECKOUT BOTTOM SHEET DRAWER
+         ===================================================================== -->
+    <div id="cartDrawer" class="modal-overlay hidden" role="dialog" aria-modal="true">
+        <div class="modal-backdrop" onclick="closeCartDrawer()"></div>
+        <div class="bottom-sheet">
+            <div class="sheet-header">
+                <div class="sheet-drag-pill" onclick="closeCartDrawer()"></div>
+                <div class="sheet-header-row">
+                    <div>
+                        <h3 id="cartTitle" style="margin: 0; font-size: 16px; font-weight: 800;">Your Order</h3>
+                        <p id="cartSubtitle" style="margin: 2px 0 0; font-size: 11.5px; color: var(--tg-theme-hint-color);">1 item in cart</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button type="button" id="clearCartBtn" onclick="clearCart()" style="font-size: 12px; font-weight: 700; color: var(--tg-theme-destructive-text-color); padding: 6px 8px;">Clear</button>
+                        <button type="button" class="icon-btn tap-active" onclick="closeCartDrawer()" aria-label="Close Cart">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" d="M18 6 6 18M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sheet-scroll-body">
+                <!-- Cart Items -->
+                <div id="cartItemsList"></div>
+
+                <!-- Delivery vs Store Pickup Switch -->
+                <div class="fulfillment-switch">
+                    <button type="button" id="deliveryBtn" class="fulfillment-btn active" onclick="setFulfillment('delivery')">🚚 Express Delivery ($4.90)</button>
+                    <button type="button" id="pickupBtn" class="fulfillment-btn" onclick="setFulfillment('pickup')">🏪 Store Pickup (Free)</button>
+                </div>
+
+                <!-- Customer Info -->
+                <div class="form-stack">
+                    <input id="custNameInput" class="sheet-input" type="text" placeholder="Your full name...">
+                    <input id="custPhoneInput" class="sheet-input" type="tel" placeholder="Phone number for delivery updates...">
+                    <input id="custAddrInput" class="sheet-input" type="text" placeholder="Delivery street address, building, or note...">
+                </div>
+
+                <!-- Promo Code -->
+                <div class="promo-row">
+                    <input id="promoCodeInput" class="sheet-input" type="text" placeholder="Promo code (try TG15)" style="text-transform: uppercase;">
+                    <button type="button" id="applyPromoBtn" class="promo-apply-btn tap-active" onclick="applyPromo()">Apply</button>
+                </div>
+                <p id="promoFeedbackMsg" class="promo-msg hidden"></p>
+
+                <!-- Order Totals -->
+                <div class="summary-card">
+                    <div class="summary-line">
+                        <span id="sumSubtotalLabel">Subtotal</span>
+                        <strong id="sumSubtotalVal">$0.00</strong>
+                    </div>
+                    <div id="sumDiscountRow" class="summary-line summary-discount hidden">
+                        <span><span id="sumDiscountLabel">Discount</span> (<span id="sumDiscountCode">TG15</span>)</span>
+                        <span id="sumDiscountVal">-$0.00</span>
+                    </div>
+                    <div class="summary-line">
+                        <span id="sumFeeLabel">Express Delivery</span>
+                        <strong id="sumFeeVal">$4.90</strong>
+                    </div>
+                    <div class="summary-total">
+                        <span id="sumTotalLabel">Total</span>
+                        <span id="sumTotalVal">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="drawerPlaceOrderFooter" class="sheet-footer">
+                <button type="button" class="checkout-trigger-btn tap-active" onclick="placeOrder()">
+                    <span id="placeOrderBtnText">Place Order</span>
+                    <span id="placeOrderBtnTotal">$0.00</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         ORDER CONFIRMATION MODAL
+         ===================================================================== -->
+    <div id="confirmModal" class="modal-overlay center-modal hidden" role="dialog" aria-modal="true">
+        <div class="modal-backdrop"></div>
+        <div class="confirm-card">
+            <div class="confirm-check">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m4.5 12.75 6 6 9-13.5"></path>
                 </svg>
             </div>
-            <div>
-                <span id="orderNumberTag" class="inline-block px-2.5 py-0.5 rounded-full bg-tg-secondaryBg text-tg-hint font-mono text-xs font-bold mb-1.5">
-                    ORDER #KB-4921
-                </span>
-                <h3 class="text-lg font-extrabold">Order Confirmed!</h3>
-                <p id="confirmationMsg" class="text-xs text-tg-hint mt-1 leading-relaxed">
-                    We've sent your order receipt to your Telegram chat. Your barista is preparing it now!
-                </p>
-            </div>
-            <div class="bg-tg-secondaryBg rounded-2xl p-3 text-left text-xs space-y-1">
-                <div class="flex justify-between">
-                    <span class="text-tg-hint">Estimated Time:</span>
-                    <span class="font-bold">15 – 25 mins</span>
+            <span id="confirmOrderId" class="order-id-chip">ORDER #TG-4821</span>
+            <h3 id="confirmTitle" style="margin: 0 0 6px; font-size: 18px; font-weight: 800;">Order Confirmed!</h3>
+            <p id="confirmDesc" style="margin: 0 0 16px; font-size: 12.5px; color: var(--tg-theme-hint-color);">
+                Thank you for your order! Your digital receipt has been prepared and our team is packing your items.
+            </p>
+            <div class="summary-card" style="margin-bottom: 16px; text-align: left;">
+                <div class="summary-line">
+                    <span id="confirmMethodLabel">Fulfillment</span>
+                    <strong id="confirmMethodVal">Express Delivery</strong>
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-tg-hint">Amount Paid:</span>
-                    <span id="confirmedTotalAmount" class="font-bold text-tg-button">$0.00</span>
+                <div class="summary-line">
+                    <span id="confirmPaidLabel">Total Amount</span>
+                    <strong id="confirmPaidVal" style="color: var(--tg-theme-button-color);">$0.00</strong>
                 </div>
             </div>
-            <button onclick="finishOrderFlow()" class="w-full py-3 rounded-xl bg-tg-button text-tg-buttonText font-bold text-sm tap-scale">
-                Done
-            </button>
+            <button type="button" id="confirmDoneBtn" class="primary-pill-btn tap-active" style="width: 100%; height: 44px;" onclick="closeConfirmModal()">Done</button>
         </div>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- TOAST NOTIFICATION (Replaces alert() cleanly)                         -->
-    <!-- ===================================================================== -->
-    <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-200 transform -translate-y-2">
-        <div class="bg-zinc-900/95 dark:bg-zinc-100/95 text-white dark:text-zinc-900 text-xs font-semibold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 whitespace-nowrap">
-            <span id="toastIcon">✓</span>
-            <span id="toastMessage">Copied to clipboard</span>
-        </div>
-    </div>
-
-    <!-- ===================================================================== -->
-    <!-- APPLICATION LOGIC & TELEGRAM MINI APP INTEGRATION                     -->
-    <!-- ===================================================================== -->
+    <!-- =====================================================================
+         SELF-CONTAINED APPLICATION LOGIC (TRILINGUAL + TELEGRAM SDK + CART)
+         ===================================================================== -->
     <script>
-        /**
-         * 1. SAMPLE PRODUCT CATALOG DATA
-         * Rich specialty coffee, pastries, whole beans, and minimalist merch.
-         */
+        /* 1. TRILINGUAL DICTIONARY (EN, KM, ZH) */
+        const I18N = {
+            en: {
+                storeTitle: 'Tech & Gadget Store',
+                officialBadge: 'Official',
+                storeSubtitle: 'Audio, Computers & Smart Gear • Fast Delivery',
+                searchPlaceholder: 'Search headphones, laptops, smartwatches, chargers...',
+                promoTag: 'Telegram Mini App Special',
+                promoHtml: 'Use code <button type="button" class="promo-code-link" onclick="copyPromoCode(\'TG15\')">TG15</button> at checkout for 15% off your entire order',
+                copyBtn: 'Copy',
+                allProducts: 'All Products',
+                itemOne: 'item',
+                itemMany: 'items',
+                addBtn: 'Add',
+                addToCart: 'Add to Cart',
+                selectOption: 'Select Variant',
+                emptyTitle: 'No matching products found',
+                emptySubtitle: 'Try clearing your search or switching categories.',
+                resetFilters: 'Reset Filters',
+                viewOrder: 'View Order',
+                viewCart: 'View Cart',
+                placeOrder: 'Place Order',
+                yourOrder: 'Your Order',
+                inCartCount: (n) => `${n} ${n === 1 ? 'item' : 'items'} in your cart`,
+                clearBtn: 'Clear',
+                deliveryOpt: '🚚 Express Delivery ($4.90)',
+                pickupOpt: '🏪 Store Pickup (Free)',
+                deliveryLabel: 'Express Delivery',
+                pickupLabel: 'Store Pickup',
+                freeText: 'Free',
+                namePlaceholder: 'Your full name...',
+                phonePlaceholder: 'Phone number for delivery updates...',
+                addrDeliveryPlaceholder: 'Delivery street address, building, or note...',
+                addrPickupPlaceholder: 'Preferred pickup time or note (optional)...',
+                promoPlaceholder: 'Promo code (try TG15)',
+                applyBtn: 'Apply',
+                promoValid: (code) => `✓ Promo code ${code} applied (15% off)`,
+                promoInvalid: 'Invalid code. Try TG15 for 15% off.',
+                subtotal: 'Subtotal',
+                discount: 'Discount',
+                total: 'Total',
+                orderPrefix: 'ORDER',
+                confirmTitle: 'Order Confirmed!',
+                confirmDesc: 'Thank you for your order! Your digital receipt has been prepared and our team is packing your items.',
+                confirmMethodLabel: 'Fulfillment',
+                confirmPaidLabel: 'Total Amount',
+                doneBtn: 'Done',
+                toastAdded: (qty, name) => `Added ${qty}× ${name}`,
+                toastCopied: (code) => `Copied "${code}" — 15% discount ready!`,
+                toastEmptyCart: 'Your cart is empty — add an item first!',
+                categories: {
+                    all: 'All',
+                    audio: 'Audio & Speakers',
+                    computers: 'Computers',
+                    accessories: 'Accessories',
+                    smart: 'Smart Gadgets'
+                }
+            },
+            km: {
+                storeTitle: 'ហាងបច្ចេកវិទ្យា Tech & Gadget',
+                officialBadge: 'ផ្លូវការ',
+                storeSubtitle: 'ឧបករណ៍សំឡេង កុំព្យូទ័រ និងឧបករណ៍ឆ្លាតវៃ • ដឹកជញ្ជូនរហ័ស',
+                searchPlaceholder: 'ស្វែងរកកាស កុំព្យូទ័រ នាឡិកាឆ្លាតវៃ ឆ្នាំងសាក...',
+                promoTag: 'ពិសេសសម្រាប់ Telegram Mini App',
+                promoHtml: 'ប្រើកូដ <button type="button" class="promo-code-link" onclick="copyPromoCode(\'TG15\')">TG15</button> ពេលទូទាត់ប្រាក់ ដើម្បីទទួលបានការបញ្ចុះតម្លៃ 15%',
+                copyBtn: 'ចម្លង',
+                allProducts: 'ផលិតផលទាំងអស់',
+                itemOne: 'មុខទំនិញ',
+                itemMany: 'មុខទំនិញ',
+                addBtn: 'បន្ថែម',
+                addToCart: 'បន្ថែមទៅកន្ត្រក',
+                selectOption: 'ជ្រើសរើសជម្រើស',
+                emptyTitle: 'រកមិនឃើញផលិតផលដែលត្រូវគ្នាទេ',
+                emptySubtitle: 'សូមសាកល្បងលុបពាក្យស្វែងរក ឬប្តូរប្រភេទទំនិញ។',
+                resetFilters: 'កំណត់ឡើងវិញ',
+                viewOrder: 'មើលការកម្ម៉ង់',
+                viewCart: 'មើលកន្ត្រក',
+                placeOrder: 'បញ្ជាទិញឥឡូវ',
+                yourOrder: 'ការកម្ម៉ង់របស់អ្នក',
+                inCartCount: (n) => `មាន ${n} មុខទំនិញក្នុងកន្ត្រករបស់អ្នក`,
+                clearBtn: 'សម្អាត',
+                deliveryOpt: '🚚 ដឹកជញ្ជូនរហ័ស ($4.90)',
+                pickupOpt: '🏪 មកយកនៅហាងផ្ទាល់ (ឥតគិតថ្លៃ)',
+                deliveryLabel: 'ដឹកជញ្ជូនរហ័ស',
+                pickupLabel: 'មកយកនៅហាងផ្ទាល់',
+                freeText: 'ឥតគិតថ្លៃ',
+                namePlaceholder: 'ឈ្មោះពេញរបស់អ្នក...',
+                phonePlaceholder: 'លេខទូរស័ព្ទសម្រាប់ទំនាក់ទំនងដឹកជញ្ជូន...',
+                addrDeliveryPlaceholder: 'អាសយដ្ឋានដឹកជញ្ជូន លេខផ្ទះ ឬកំណត់ចំណាំ...',
+                addrPickupPlaceholder: 'ម៉ោងមកទទួលទំនិញ ឬកំណត់ចំណាំ (ស្រេចចិត្ត)...',
+                promoPlaceholder: 'កូដបញ្ចុះតម្លៃ (សាកល្បង TG15)',
+                applyBtn: 'ប្រើកូដ',
+                promoValid: (code) => `✓ បានប្រើកូដ ${code} ដោយជោគជ័យ (បញ្ចុះ 15%)`,
+                promoInvalid: 'កូដមិនត្រឹមត្រូវទេ។ សាកល្បង TG15 ដើម្បីបញ្ចុះ 15%។',
+                subtotal: 'សរុបរង',
+                discount: 'បញ្ចុះតម្លៃ',
+                total: 'ទឹកប្រាក់សរុប',
+                orderPrefix: 'ការកម្ម៉ង់',
+                confirmTitle: 'ការកម្ម៉ង់ត្រូវបានបញ្ជាក់!',
+                confirmDesc: 'សូមអរគុណសម្រាប់ការបញ្ជាទិញ! វិក្កយបត្ររបស់អ្នកត្រូវបានរៀបចំរួចរាល់ ហើយក្រុមការងារកំពុងវេចខ្ចប់ទំនិញជូនអ្នក។',
+                confirmMethodLabel: 'វិធីសាស្ត្រទទួលទំនិញ',
+                confirmPaidLabel: 'ទឹកប្រាក់សរុប',
+                doneBtn: 'រួចរាល់',
+                toastAdded: (qty, name) => `បានបន្ថែម ${qty}× ${name}`,
+                toastCopied: (code) => `បានចម្លង "${code}" — បញ្ចុះតម្លៃ 15% រួចរាល់!`,
+                toastEmptyCart: 'កន្ត្រករបស់អ្នកទទេ — សូមបន្ថែមទំនិញជាមុនសិន!',
+                categories: {
+                    all: 'ទាំងអស់',
+                    audio: 'ឧបករណ៍សំឡេង',
+                    computers: 'កុំព្យូទ័រ',
+                    accessories: 'គ្រឿងបន្ថែម',
+                    smart: 'ឧបករណ៍ឆ្លាតវៃ'
+                }
+            },
+            zh: {
+                storeTitle: '数码科技旗舰店',
+                officialBadge: '官方',
+                storeSubtitle: '音频设备、电脑数码与智能好物 • 极速配送',
+                searchPlaceholder: '搜索耳机、笔记本电脑、智能手表、充电器...',
+                promoTag: 'Telegram 小程序专享优惠',
+                promoHtml: '结账时使用优惠码 <button type="button" class="promo-code-link" onclick="copyPromoCode(\'TG15\')">TG15</button> 即可享受整单 85 折',
+                copyBtn: '复制',
+                allProducts: '全部商品',
+                itemOne: '件商品',
+                itemMany: '件商品',
+                addBtn: '加入',
+                addToCart: '加入购物车',
+                selectOption: '选择规格',
+                emptyTitle: '未找到匹配的商品',
+                emptySubtitle: '请尝试清除搜索关键词或切换商品分类。',
+                resetFilters: '重置筛选',
+                viewOrder: '查看订单',
+                viewCart: '查看购物车',
+                placeOrder: '立即下单',
+                yourOrder: '您的订单',
+                inCartCount: (n) => `购物车中共有 ${n} 件商品`,
+                clearBtn: '清空',
+                deliveryOpt: '🚚 极速配送 ($4.90)',
+                pickupOpt: '🏪 门店自提 (免费)',
+                deliveryLabel: '极速配送',
+                pickupLabel: '门店自提',
+                freeText: '免费',
+                namePlaceholder: '您的姓名...',
+                phonePlaceholder: '用于接收配送通知的联系电话...',
+                addrDeliveryPlaceholder: '详细收货地址、门牌号或备注...',
+                addrPickupPlaceholder: '预计到店时间或备注（选填）...',
+                promoPlaceholder: '输入优惠码（试试 TG15）',
+                applyBtn: '使用',
+                promoValid: (code) => `✓ 已成功应用优惠码 ${code}（立享 85 折）`,
+                promoInvalid: '优惠码无效，请尝试输入 TG15 享 85 折。',
+                subtotal: '商品小计',
+                discount: '优惠减免',
+                total: '应付总额',
+                orderPrefix: '订单号',
+                confirmTitle: '订单已确认！',
+                confirmDesc: '感谢您的订购！您的电子收据已生成，我们的团队正在为您打包商品。',
+                confirmMethodLabel: '配送方式',
+                confirmPaidLabel: '实付总额',
+                doneBtn: '完成',
+                toastAdded: (qty, name) => `已添加 ${qty}× ${name}`,
+                toastCopied: (code) => `已复制 "${code}" — 结账享 85 折优惠！`,
+                toastEmptyCart: '购物车还是空的 — 请先添加商品！',
+                categories: {
+                    all: '全部',
+                    audio: '音频设备',
+                    computers: '电脑数码',
+                    accessories: '精选配件',
+                    smart: '智能穿戴'
+                }
+            }
+        };
+
+        /* 2. INLINE SVG ARTWORK HELPERS (GUARANTEED TO RENDER IN SANDBOXED PREVIEWS) */
+        const SVG_ICONS = {
+            headphones: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 36v-4a20 20 0 0 1 40 0v4"/><rect x="8" y="34" width="10" height="18" rx="5" fill="rgba(255,255,255,0.22)"/><rect x="46" y="34" width="10" height="18" rx="5" fill="rgba(255,255,255,0.22)"/></svg>`,
+            speaker: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><rect x="16" y="8" width="32" height="48" rx="8" fill="rgba(255,255,255,0.16)"/><circle cx="32" cy="21" r="4"/><circle cx="32" cy="40" r="9"/></svg>`,
+            laptop: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><rect x="12" y="14" width="40" height="28" rx="4" fill="rgba(255,255,255,0.18)"/><path d="M6 46h52l-4 5H10l-4-5Z" fill="rgba(255,255,255,0.25)"/></svg>`,
+            keyboard: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="18" width="52" height="28" rx="6" fill="rgba(255,255,255,0.18)"/><path d="M14 26h4M22 26h4M30 26h4M38 26h4M46 26h4M14 33h4M22 33h4M30 33h4M38 33h4M46 33h4M20 40h24"/></svg>`,
+            charger: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="18" width="28" height="34" rx="6" fill="rgba(255,255,255,0.18)"/><path d="M25 10v8M39 10v8M33 27l-5 8h8l-5 8"/></svg>`,
+            ssd: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><rect x="16" y="10" width="32" height="44" rx="7" fill="rgba(255,255,255,0.18)"/><path d="M24 20h16M24 28h10"/><circle cx="32" cy="43" r="3" fill="#ffffff"/></svg>`,
+            watch: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 8h16l2 10H22L24 8ZM22 46h20l-2 10H24l-2-10Z" fill="rgba(255,255,255,0.18)"/><rect x="17" y="18" width="30" height="28" rx="8" fill="rgba(255,255,255,0.22)"/><path d="M32 26v7l5 3"/></svg>`,
+            earbuds: `<svg viewBox="0 0 64 64" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><rect x="12" y="18" width="40" height="30" rx="12" fill="rgba(255,255,255,0.18)"/><path d="M12 31h40"/><circle cx="24" cy="25" r="3" fill="#ffffff"/><circle cx="40" cy="25" r="3" fill="#ffffff"/></svg>`
+        };
+
+        /* 3. RICH 8-PRODUCT TRILINGUAL CATALOG */
         const PRODUCTS = [
             {
-                id: 'esp-01',
-                category: 'Coffee',
-                badge: 'Bestseller',
-                title: 'Velvet Oat Flat White',
-                shortDesc: 'Double ristretto shot pulled over silky micro-foamed oat milk.',
-                fullDesc: 'Crafted with our signature Ethiopian Yirgacheffe & Colombian Huila house blend. Double ristretto extraction delivers rich cocoa notes balanced by velvety steamed barista oat milk.',
-                price: 4.75,
-                options: ['Regular (8oz)', 'Large (12oz)', 'Iced (12oz)'],
-                image: 'https://placehold.co/600x450/2c1e16/f5ebe0?text=Velvet+Oat+Flat+White'
+                id: 'aud-anc',
+                category: 'audio',
+                rating: '4.9',
+                price: 179.00,
+                bg: 'linear-gradient(135deg, #1e3a8a, #3b82f6)',
+                icon: 'headphones',
+                i18n: {
+                    en: {
+                        badge: 'Bestseller',
+                        title: 'StudioPro ANC Headphones',
+                        short: 'Hybrid -45dB noise cancellation & 50-hour battery.',
+                        desc: 'Custom 40mm bio-cellulose drivers with adaptive hybrid active noise cancellation, lossless USB-C audio, and plush memory-foam ear cushions.',
+                        options: ['Midnight Black', 'Silver Mist', 'Sandstone']
+                    },
+                    km: {
+                        badge: 'លក់ដាច់បំផុត',
+                        title: 'កាសឥតខ្សែ StudioPro ANC',
+                        short: 'កាត់បន្ថយសំឡេងរំខាន -45dB និងថ្មកាន់បាន 50 ម៉ោង។',
+                        desc: 'បំពាក់ដោយ Speaker ទំហំ 40mm បច្ចេកវិទ្យាកាត់បន្ថយសំឡេងរំខានឆ្លាតវៃ និងទ្រនាប់ត្រចៀកទន់ល្មើយសម្រាប់ពាក់ពេញមួយថ្ងៃ។',
+                        options: ['ខ្មៅគ្រើម', 'ប្រាក់ភ្លឺ', 'ពណ៌ខ្សាច់']
+                    },
+                    zh: {
+                        badge: '畅销爆款',
+                        title: 'StudioPro ANC 旗舰降噪耳机',
+                        short: '-45dB 混合主动降噪，50 小时超长续航。',
+                        desc: '定制 40mm 生物纤维振膜单元，自适应混合主动降噪与 USB-C 无损音频传输，记忆海绵耳罩全天候舒适佩戴。',
+                        options: ['午夜黑', '星雾银', '砂岩米']
+                    }
+                }
             },
             {
-                id: 'esp-02',
-                category: 'Coffee',
-                badge: 'New',
-                title: 'Kyoto Cold Brew Tonic',
-                shortDesc: '18-hour slow-drip single origin over botanical yuzu tonic.',
-                fullDesc: 'Bright, effervescent, and deeply refreshing. Our 18-hour Kyoto-style slow drip concentrate layered over artisanal yuzu botanical tonic and expressed Valencia orange peel.',
-                price: 5.50,
-                options: ['12oz Glass', '16oz Tall'],
-                image: 'https://placehold.co/600x450/1e293b/38bdf8?text=Kyoto+Cold+Brew+Tonic'
+                id: 'aud-spk',
+                category: 'audio',
+                rating: '4.8',
+                price: 99.00,
+                bg: 'linear-gradient(135deg, #0f766e, #14b8a6)',
+                icon: 'speaker',
+                i18n: {
+                    en: {
+                        badge: 'IP67 Waterproof',
+                        title: 'PulseWave 360° Smart Speaker',
+                        short: '360-degree room-filling stereo sound with deep bass.',
+                        desc: 'Dual passive radiators deliver rich 360° omnidirectional audio, IP67 water & dust resistance, and 20-hour wireless playback.',
+                        options: ['Teal', 'Charcoal', 'Coral']
+                    },
+                    km: {
+                        badge: 'ការពារទឹក IP67',
+                        title: 'ឧបករណ៍បំពងសំឡេង PulseWave 360°',
+                        short: 'សំឡេងជុំវិញខ្លួន 360 ដឺក្រេ ជាមួយបាសធ្ងន់ច្បាស់ល្អ។',
+                        desc: 'ផ្តល់សំឡេងច្បាស់គ្រប់ទិសទី ធន់នឹងទឹក និងធូលីកម្រិត IP67 ព្រមទាំងថ្មកាន់បាន 20 ម៉ោង។',
+                        options: ['ខៀវបៃតង', 'ខ្មៅធ្យូង', 'ផ្កាថ្ម']
+                    },
+                    zh: {
+                        badge: 'IP67 防水',
+                        title: 'PulseWave 360° 全向蓝牙音箱',
+                        short: '360 度环绕立体声，双低音振膜澎湃音效。',
+                        desc: '双被动低音辐射器带来浑厚 360° 全向音效，支持 IP67 防尘防水与 20 小时无线续航。',
+                        options: ['青碧色', '炭黑色', '珊瑚橙']
+                    }
+                }
             },
             {
-                id: 'pas-01',
-                category: 'Pastries',
-                badge: 'Fresh Baked',
-                title: 'Cardamom Knot Croissant',
-                shortDesc: 'Laminated French butter pastry woven with freshly ground cardamom.',
-                fullDesc: 'Baked every morning at 6:00 AM using Normandy cultured butter. Flaky 27-layer laminated dough braided with aromatic green cardamom pods and raw pearl sugar.',
-                price: 4.25,
-                options: ['Warm', 'Room Temp'],
-                image: 'https://placehold.co/600x450/78350f/fef3c7?text=Cardamom+Croissant'
+                id: 'cmp-ultra',
+                category: 'computers',
+                rating: '4.9',
+                price: 1199.00,
+                bg: 'linear-gradient(135deg, #312e81, #6366f1)',
+                icon: 'laptop',
+                i18n: {
+                    en: {
+                        badge: 'Pro Choice',
+                        title: 'AeroBook 14" OLED Ultrabook',
+                        short: '120Hz 2.8K OLED display, 16GB RAM & featherweight chassis.',
+                        desc: 'Precision CNC aluminum unibody weighing just 1.18kg, powered by an 8-core next-gen processor, 120Hz OLED display, and Thunderbolt 4 ports.',
+                        options: ['512GB SSD', '1TB SSD', '2TB SSD']
+                    },
+                    km: {
+                        badge: 'ជម្រើសអ្នកជំនាញ',
+                        title: 'កុំព្យូទ័រយួរដៃ AeroBook 14" OLED',
+                        short: 'អេក្រង់ 120Hz 2.8K OLED RAM 16GB និងតួស្តើងស្រាល។',
+                        desc: 'តួអាលុយមីញ៉ូម CNC ទម្ងន់ត្រឹម 1.18kg អេក្រង់ OLED 120Hz ច្បាស់ត្រជាក់ភ្នែក និងរន្ធ Thunderbolt 4 ល្បឿនលឿន។',
+                        options: ['512GB SSD', '1TB SSD', '2TB SSD']
+                    },
+                    zh: {
+                        badge: '专业之选',
+                        title: 'AeroBook 14" OLED 轻薄笔记本',
+                        short: '120Hz 2.8K OLED 屏幕，16GB 内存，仅重 1.18kg。',
+                        desc: '精密 CNC 全铝一体机身，搭载高性能八核处理器、120Hz 高刷 OLED 屏与双雷电 4 接口。',
+                        options: ['512GB 固态', '1TB 固态', '2TB 固态']
+                    }
+                }
             },
             {
-                id: 'pas-02',
-                category: 'Pastries',
-                badge: null,
-                title: 'Basque Burnt Cheesecake',
-                shortDesc: 'Caramelized crust with a molten, creamy vanilla bean center.',
-                fullDesc: 'San Sebastián style crustless cheesecake baked at high heat for a deep caramelized top and an ultra-creamy, custard-like Madagascar vanilla center.',
-                price: 6.50,
-                options: ['Classic Slice', 'With Berry Compote'],
-                image: 'https://placehold.co/600x450/451a03/fde68a?text=Basque+Cheesecake'
+                id: 'cmp-key',
+                category: 'computers',
+                rating: '4.8',
+                price: 139.00,
+                bg: 'linear-gradient(135deg, #4c1d95, #8b5cf6)',
+                icon: 'keyboard',
+                i18n: {
+                    en: {
+                        badge: 'Hot',
+                        title: 'KeyForge 75% Mechanical Keyboard',
+                        short: 'Gasket-mounted CNC aluminum wireless mechanical keyboard.',
+                        desc: 'Triple-mode wireless (2.4GHz / Bluetooth / USB-C), hot-swappable pre-lubed switches, and south-facing RGB backlighting.',
+                        options: ['Linear Switch', 'Tactile Switch']
+                    },
+                    km: {
+                        badge: 'ពេញនិយមខ្លាំង',
+                        title: 'ក្តារចុចមេកានិច KeyForge 75%',
+                        short: 'តួអាលុយមីញ៉ូម CNC ភ្ជាប់ឥតខ្សែបាន 3 របៀប។',
+                        desc: 'ភ្ជាប់បានទាំង 2.4GHz / Bluetooth / USB-C អាចប្តូរ Switch បានយ៉ាងងាយស្រួល និងមានភ្លើង RGB ស្រស់ស្អាត។',
+                        options: ['Linear (រលូន)', 'Tactile (មានអារម្មណ៍ចុច)']
+                    },
+                    zh: {
+                        badge: '人气热销',
+                        title: 'KeyForge 75% 全铝客制化机械键盘',
+                        short: 'Gasket 结构热插拔三模机械键盘，CNC 铝合金机身。',
+                        desc: '支持 2.4GHz / 蓝牙 / USB-C 三模连接，出厂精润轴体支持全键热插拔与南向 RGB 背光。',
+                        options: ['线性轴', '段落轴']
+                    }
+                }
             },
             {
-                id: 'mat-01',
-                category: 'Matcha & Tea',
-                badge: 'Ceremonial',
-                title: 'Uji Ceremonial Matcha Latte',
-                shortDesc: 'First-harvest stone-ground Uji matcha whisked to order.',
-                fullDesc: 'Shade-grown Tencha leaves from Uji, Kyoto, stone-milled into vibrant emerald powder. Hand-whisked to order and poured over your choice of cold or steamed milk.',
-                price: 5.75,
-                options: ['Oat Milk', 'Whole Milk', 'Almond Milk'],
-                image: 'https://placehold.co/600x450/14532d/dcfce7?text=Uji+Matcha+Latte'
+                id: 'acc-gan',
+                category: 'accessories',
+                rating: '4.9',
+                price: 69.00,
+                bg: 'linear-gradient(135deg, #065f46, #10b981)',
+                icon: 'charger',
+                i18n: {
+                    en: {
+                        badge: '140W GaN',
+                        title: 'VoltCore 140W GaN Fast Charger',
+                        short: '4-port PD 3.1 desktop & travel charger for laptop and phone.',
+                        desc: 'Charges a 16-inch laptop at full 140W PD 3.1 speed while simultaneously powering your smartphone, tablet, and earbuds safely.',
+                        options: ['US Plug', 'EU Plug', 'UK Plug']
+                    },
+                    km: {
+                        badge: '140W GaN',
+                        title: 'ឆ្នាំងសាកល្បឿនលឿន VoltCore 140W',
+                        short: 'រន្ធសាក 4 PD 3.1 សម្រាប់កុំព្យូទ័រ និងទូរស័ព្ទព្រមគ្នា។',
+                        desc: 'សាកកុំព្យូទ័រយួរដៃកម្លាំង 140W PD 3.1 ព្រមគ្នាជាមួយទូរស័ព្ទ និងថេប្លេតប្រកបដោយសុវត្ថិភាពខ្ពស់។',
+                        options: ['ជើងអាមេរិក (US)', 'ជើងអឺរ៉ុប (EU)', 'ជើងអង់គ្លេស (UK)']
+                    },
+                    zh: {
+                        badge: '140W 氮化镓',
+                        title: 'VoltCore 140W 氮化镓四口快充头',
+                        short: 'PD 3.1 四口桌面旅行充，同时为笔记本和手机快充。',
+                        desc: '单口最高 140W PD 3.1 满速输出，智能分流保护，轻松满足笔记本、手机与平板同时快充。',
+                        options: ['美规插头', '欧规插头', '英规插头']
+                    }
+                }
             },
             {
-                id: 'bns-01',
-                category: 'Whole Beans',
-                badge: 'Single Origin',
-                title: 'Ethiopia Guji Natural (250g)',
-                shortDesc: 'Tasting notes: Blueberry jam, jasmine blossom, milk chocolate.',
-                fullDesc: 'Grown at 2,150 MASL in Hambela Wamena, Guji. Natural sun-dried processing produces explosive berry aromatics and a syrupy body ideal for V60 or Espresso.',
-                price: 18.00,
-                options: ['Whole Bean', 'Filter Grind', 'Espresso Grind'],
-                image: 'https://placehold.co/600x450/312e81/e0e7ff?text=Ethiopia+Guji+250g'
+                id: 'acc-ssd',
+                category: 'accessories',
+                rating: '4.8',
+                price: 115.00,
+                bg: 'linear-gradient(135deg, #334155, #64748b)',
+                icon: 'ssd',
+                i18n: {
+                    en: {
+                        badge: '2000MB/s',
+                        title: 'VaultNVMe Rugged Portable SSD',
+                        short: 'Shockproof USB 3.2 Gen 2x2 pocket solid-state drive.',
+                        desc: 'Blazing 2,000MB/s transfer speeds in a finned aluminum heatsink enclosure with IP65 water and drop protection.',
+                        options: ['1TB', '2TB', '4TB']
+                    },
+                    km: {
+                        badge: '2000MB/s',
+                        title: 'អង្គផ្ទុកទិន្នន័យចល័ត VaultNVMe SSD',
+                        short: 'ល្បឿនលឿន 2,000MB/s ធន់នឹងការធ្លាក់ និងការពារទឹក IP65។',
+                        desc: 'ផ្ទេរឯកសារធំៗបានរហ័សទាន់ចិត្ត 2,000MB/s ក្នុងប្រអប់អាលុយមីញ៉ូមបញ្ចេញកម្តៅបានល្អ។',
+                        options: ['1TB', '2TB', '4TB']
+                    },
+                    zh: {
+                        badge: '2000MB/s',
+                        title: 'VaultNVMe 三防高速移动固态硬盘',
+                        short: 'IP65 防尘防水抗摔，USB 3.2 Gen 2x2 极速传输。',
+                        desc: '高达 2,000MB/s 读写速率，鳍片式铝合金散热装甲，轻松应对 4K 视频剪辑与大文件秒传。',
+                        options: ['1TB', '2TB', '4TB']
+                    }
+                }
             },
             {
-                id: 'bns-02',
-                category: 'Whole Beans',
-                badge: null,
-                title: 'House Espresso Blend (500g)',
-                shortDesc: 'Tasting notes: Roasted hazelnut, dark caramel, bittersweet cacao.',
-                fullDesc: 'Our flagship daily driver combining washed Colombian and natural Brazilian lots. Developed specifically for heavy crema, low acidity, and sweet milk pairing.',
-                price: 29.00,
-                options: ['Whole Bean', 'Espresso Grind'],
-                image: 'https://placehold.co/600x450/18181b/f4f4f5?text=House+Espresso+500g'
+                id: 'smt-watch',
+                category: 'smart',
+                rating: '4.9',
+                price: 229.00,
+                bg: 'linear-gradient(135deg, #9a3412, #f97316)',
+                icon: 'watch',
+                i18n: {
+                    en: {
+                        badge: 'New',
+                        title: 'ChronoFit Ultra Titanium Watch',
+                        short: 'AMOLED GPS smartwatch with 14-day battery & health tracking.',
+                        desc: 'Aerospace-grade titanium bezel, dual-frequency GPS, 24/7 heart-rate & sleep insights, and 10ATM swim-proof durability.',
+                        options: ['45mm Titanium', '49mm Titanium']
+                    },
+                    km: {
+                        badge: 'ថ្មី',
+                        title: 'នាឡិកាឆ្លាតវៃ ChronoFit Ultra ទីតាញ៉ូម',
+                        short: 'អេក្រង់ AMOLED GPS និងថ្មកាន់បាន 14 ថ្ងៃ។',
+                        desc: 'តួទីតាញ៉ូមរឹងមាំ ប្រព័ន្ធ GPS ច្បាស់ល្អ តាមដានចង្វាក់បេះដូង និងដំណេក 24 ម៉ោង ព្រមទាំងធន់នឹងទឹក 10ATM។',
+                        options: ['45mm ទីតាញ៉ូម', '49mm ទីតាញ៉ូម']
+                    },
+                    zh: {
+                        badge: '新品上市',
+                        title: 'ChronoFit Ultra 钛金属智能手表',
+                        short: 'AMOLED 户外双频 GPS 手表，14 天超长续航。',
+                        desc: '航天级钛金属表圈，双频五星精准定位，全天候心率与睡眠健康监测，支持 10ATM 游泳防水。',
+                        options: ['45mm 钛金属', '49mm 钛金属']
+                    }
+                }
             },
             {
-                id: 'mrc-01',
-                category: 'Gear & Merch',
-                badge: 'Limited',
-                title: 'Matte Ceramic Fellow Tumbler',
-                shortDesc: '12oz double-wall vacuum insulated with ceramic interior coating.',
-                fullDesc: 'Engineered to preserve pure coffee aroma without metallic aftertaste. Features a 360° sip lid, leak-proof seal, and laser-etched Kova & Bean emblem.',
-                price: 32.00,
-                options: ['Matte Black', 'Stone White'],
-                image: 'https://placehold.co/600x450/0f172a/94a3b8?text=Ceramic+Tumbler+12oz'
+                id: 'smt-buds',
+                category: 'smart',
+                rating: '4.7',
+                price: 119.00,
+                bg: 'linear-gradient(135deg, #831843, #ec4899)',
+                icon: 'earbuds',
+                i18n: {
+                    en: {
+                        badge: 'Spatial Audio',
+                        title: 'AirPods-Style SonicBuds Pro',
+                        short: 'Adaptive transparency earbuds with wireless charging case.',
+                        desc: 'Dual coaxial drivers, AI call noise reduction, IP55 sweat resistance, and 32 hours total battery with wireless charging.',
+                        options: ['Arctic White', 'Graphite Gray']
+                    },
+                    km: {
+                        badge: 'សំឡេង Spatial',
+                        title: 'កាសប្ល៊ូធូសឥតខ្សែ SonicBuds Pro',
+                        short: 'សំឡេងច្បាស់ត្រជាក់ចិត្ត និងប្រអប់សាកថ្មឥតខ្សែ។',
+                        desc: 'កាត់បន្ថយសំឡេងរំខានពេលនិយាយទូរស័ព្ទ ធន់នឹងញើស IP55 និងប្រើបានសរុប 32 ម៉ោង។',
+                        options: ['សបរិសុទ្ធ', 'ប្រផេះចាស់']
+                    },
+                    zh: {
+                        badge: '空间音频',
+                        title: 'SonicBuds Pro 真无线降噪耳机',
+                        short: '自适应通透模式，支持无线充电盒。',
+                        desc: '双单元高解析音质，AI 通话降噪，IP55 防汗防水，搭配无线充电盒综合续航达 32 小时。',
+                        options: ['极地白', '石墨灰']
+                    }
+                }
             }
         ];
 
-        const CATEGORIES = ['All', 'Coffee', 'Pastries', 'Matcha & Tea', 'Whole Beans', 'Gear & Merch'];
+        const CATEGORY_ORDER = ['all', 'audio', 'computers', 'accessories', 'smart'];
 
-        /**
-         * 2. APPLICATION STATE
-         */
+        /* 4. APPLICATION STATE */
         const state = {
-            selectedCategory: 'All',
-            searchQuery: '',
-            cart: [], // Array of { key, productId, title, price, image, option, qty }
-            fulfillmentMode: 'delivery', // 'delivery' | 'pickup'
-            promoCode: null, // 'TG15'
+            lang: 'en',
+            category: 'all',
+            search: '',
+            cart: [], // { key, productId, price, optionIdx, qty }
+            fulfillment: 'delivery', // 'delivery' | 'pickup'
+            promoCode: null,
             discountRate: 0,
-            activeModalProduct: null,
-            activeModalOption: null,
-            activeModalQty: 1,
-            isCartOpen: false,
+            modalProduct: null,
+            modalOptionIdx: 0,
+            modalQty: 1,
             isProductModalOpen: false,
-            isTelegramEnv: false,
+            isCartOpen: false,
             tg: null,
-            lockedScrollY: 0,
-            isBodyLocked: false
+            isTgEnv: false
         };
 
-        /**
-         * Cleanly lock/unlock background document scroll without losing scroll position
-         */
-        function lockBackgroundScroll() {
-            if (state.isBodyLocked) return;
-            state.lockedScrollY = window.scrollY || window.pageYOffset || 0;
-            document.body.style.top = `-${state.lockedScrollY}px`;
-            document.body.classList.add('modal-open');
-            state.isBodyLocked = true;
+        function dict() {
+            return I18N[state.lang] || I18N.en;
         }
 
-        function unlockBackgroundScroll() {
-            if (!state.isBodyLocked) return;
-            document.body.classList.remove('modal-open');
-            document.body.style.top = '';
-            window.scrollTo(0, state.lockedScrollY);
-            state.isBodyLocked = false;
+        function getProdText(prod) {
+            return prod.i18n[state.lang] || prod.i18n.en;
         }
 
-        /**
-         * 3. TELEGRAM WEBAPP SDK INITIALIZATION & THEME SYNC
-         */
-        function initTelegramWebApp() {
-            const tg = window.Telegram && window.Telegram.WebApp;
-            
-            // Detect if running inside genuine Telegram WebApp container
-            if (tg && tg.initData && tg.initData.length > 0) {
-                state.isTelegramEnv = true;
+        /* 5. LANGUAGE AUTO-DETECTION & SWITCHING */
+        function detectInitialLanguage() {
+            try {
+                const saved = localStorage.getItem('tg_miniapp_lang');
+                if (saved && I18N[saved]) return saved;
+            } catch (e) {}
+
+            try {
+                const tgLang = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
+                if (tgLang) {
+                    const lc = tgLang.toLowerCase();
+                    if (lc.startsWith('km')) return 'km';
+                    if (lc.startsWith('zh')) return 'zh';
+                }
+            } catch (e) {}
+
+            return 'en';
+        }
+
+        function setLanguage(lang, silent = false) {
+            if (!I18N[lang]) lang = 'en';
+            state.lang = lang;
+            document.documentElement.lang = lang;
+
+            try {
+                localStorage.setItem('tg_miniapp_lang', lang);
+            } catch (e) {}
+
+            if (!silent) haptic('selection');
+
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+
+            applyStaticTranslations();
+            renderCategories();
+            renderProducts();
+
+            if (state.isProductModalOpen && state.modalProduct) {
+                populateProductModalContent();
+            }
+            if (state.isCartOpen) {
+                renderCartSheet();
+            }
+            syncBottomCheckoutBar();
+        }
+
+        function applyStaticTranslations() {
+            const d = dict();
+            document.getElementById('storeTitle').textContent = d.storeTitle;
+            document.getElementById('officialBadge').textContent = d.officialBadge;
+            document.getElementById('storeSubtitle').textContent = d.storeSubtitle;
+            document.getElementById('searchInput').placeholder = d.searchPlaceholder;
+            document.getElementById('promoTag').textContent = d.promoTag;
+            document.getElementById('promoCopy').innerHTML = d.promoHtml;
+            document.getElementById('promoCopyBtn').textContent = d.copyBtn;
+
+            document.getElementById('emptyTitle').textContent = d.emptyTitle;
+            document.getElementById('emptySubtitle').textContent = d.emptySubtitle;
+            document.getElementById('emptyResetBtn').textContent = d.resetFilters;
+
+            document.getElementById('modalOptLabel').textContent = d.selectOption;
+            document.getElementById('modalAddLabel').textContent = d.addToCart;
+
+            document.getElementById('cartTitle').textContent = d.yourOrder;
+            document.getElementById('clearCartBtn').textContent = d.clearBtn;
+            document.getElementById('deliveryBtn').textContent = d.deliveryOpt;
+            document.getElementById('pickupBtn').textContent = d.pickupOpt;
+            document.getElementById('custNameInput').placeholder = d.namePlaceholder;
+            document.getElementById('custPhoneInput').placeholder = d.phonePlaceholder;
+            document.getElementById('custAddrInput').placeholder =
+                state.fulfillment === 'delivery' ? d.addrDeliveryPlaceholder : d.addrPickupPlaceholder;
+            document.getElementById('promoCodeInput').placeholder = d.promoPlaceholder;
+            document.getElementById('applyPromoBtn').textContent = d.applyBtn;
+
+            document.getElementById('sumSubtotalLabel').textContent = d.subtotal;
+            document.getElementById('sumDiscountLabel').textContent = d.discount;
+            document.getElementById('sumTotalLabel').textContent = d.total;
+            document.getElementById('placeOrderBtnText').textContent = d.placeOrder;
+
+            document.getElementById('confirmTitle').textContent = d.confirmTitle;
+            document.getElementById('confirmDesc').textContent = d.confirmDesc;
+            document.getElementById('confirmMethodLabel').textContent = d.confirmMethodLabel;
+            document.getElementById('confirmPaidLabel').textContent = d.confirmPaidLabel;
+            document.getElementById('confirmDoneBtn').textContent = d.doneBtn;
+
+            const promoMsg = document.getElementById('promoFeedbackMsg');
+            if (!promoMsg.classList.contains('hidden')) {
+                promoMsg.textContent = state.promoCode ? d.promoValid(state.promoCode) : d.promoInvalid;
+            }
+        }
+
+        /* 6. TELEGRAM MINI APP SDK & THEME SYNC */
+        function initTelegramSDK() {
+            try {
+                const tg = window.Telegram && window.Telegram.WebApp;
+                if (!tg) return;
+
                 state.tg = tg;
-                document.documentElement.classList.add('tg-initialized');
-
-                // Notify Telegram that the Mini App is ready to be displayed
-                tg.ready();
-                
-                // Expand Mini App to full available viewport height
-                tg.expand();
-
-                // Prevent vertical scroll gestures from accidentally closing/collapsing the Mini App (Bot API 7.7+)
-                if (typeof tg.disableVerticalSwipes === 'function') {
-                    try {
-                        tg.disableVerticalSwipes();
-                    } catch (e) {
-                        // Ignore on older Telegram clients
-                    }
+                if (tg.initData && tg.initData.length > 0) {
+                    state.isTgEnv = true;
                 }
 
-                // Apply Telegram Theme Parameters to CSS Variables
-                syncTelegramTheme(tg);
-                tg.onEvent('themeChanged', () => syncTelegramTheme(tg));
+                tg.ready();
+                tg.expand();
 
-                // Configure Native MainButton
-                tg.MainButton.onClick(handleMainButtonClick);
+                applyTelegramTheme(tg);
+                tg.onEvent('themeChanged', () => applyTelegramTheme(tg));
 
-                // Configure Native BackButton for modals/drawers
+                tg.MainButton.onClick(() => {
+                    if (state.isCartOpen) {
+                        placeOrder();
+                    } else {
+                        openCartDrawer();
+                    }
+                });
+
                 tg.BackButton.onClick(() => {
                     if (state.isProductModalOpen) closeProductModal();
                     else if (state.isCartOpen) closeCartDrawer();
                 });
-
-                // Hide browser theme toggle if inside native Telegram
-                const themeBtn = document.getElementById('themeToggleBtn');
-                if (themeBtn) themeBtn.classList.add('hidden');
-            } else {
-                // Standalone browser / desktop preview fallback
-                state.isTelegramEnv = false;
-                updateThemeIcons();
-            }
-        }
-
-        function syncTelegramTheme(tg) {
-            if (!tg || !tg.themeParams) return;
-            const p = tg.themeParams;
-            const root = document.documentElement.style;
-
-            if (p.bg_color) root.setProperty('--tg-theme-bg-color', p.bg_color);
-            if (p.text_color) root.setProperty('--tg-theme-text-color', p.text_color);
-            if (p.hint_color) root.setProperty('--tg-theme-hint-color', p.hint_color);
-            if (p.link_color) root.setProperty('--tg-theme-link-color', p.link_color);
-            if (p.button_color) root.setProperty('--tg-theme-button-color', p.button_color);
-            if (p.button_text_color) root.setProperty('--tg-theme-button-text-color', p.button_text_color);
-            if (p.secondary_bg_color) root.setProperty('--tg-theme-secondary-bg-color', p.secondary_bg_color);
-
-            try {
-                if (p.bg_color) tg.setHeaderColor(p.bg_color);
-                if (p.bg_color) tg.setBackgroundColor(p.bg_color);
             } catch (e) {
-                // Ignore if older Bot API version
+                // Safe fallback when running outside Telegram
             }
         }
 
-        /**
-         * Trigger Native Telegram Haptic Feedback safely
-         */
-        function triggerHaptic(type = 'light') {
+        function applyTelegramTheme(tg) {
             try {
-                if (state.isTelegramEnv && state.tg && state.tg.HapticFeedback) {
-                    if (type === 'success' || type === 'warning' || type === 'error') {
-                        state.tg.HapticFeedback.notificationOccurred(type);
-                    } else if (type === 'selection') {
-                        state.tg.HapticFeedback.selectionChanged();
-                    } else {
-                        state.tg.HapticFeedback.impactOccurred(type); // 'light' | 'medium' | 'heavy'
-                    }
+                const p = tg.themeParams || {};
+                const root = document.documentElement.style;
+                if (p.bg_color) root.setProperty('--tg-theme-bg-color', p.bg_color);
+                if (p.secondary_bg_color) root.setProperty('--tg-theme-secondary-bg-color', p.secondary_bg_color);
+                if (p.text_color) root.setProperty('--tg-theme-text-color', p.text_color);
+                if (p.hint_color) root.setProperty('--tg-theme-hint-color', p.hint_color);
+                if (p.link_color) root.setProperty('--tg-theme-link-color', p.link_color);
+                if (p.button_color) root.setProperty('--tg-theme-button-color', p.button_color);
+                if (p.button_text_color) root.setProperty('--tg-theme-button-text-color', p.button_text_color);
+                if (p.header_bg_color) root.setProperty('--tg-theme-header-bg-color', p.header_bg_color);
+                if (p.section_bg_color) root.setProperty('--tg-theme-section-bg-color', p.section_bg_color);
+
+                if (tg.colorScheme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                } else if (tg.colorScheme === 'light') {
+                    document.body.classList.remove('dark-theme');
                 }
-            } catch (err) {
-                // Graceful fallback on desktop browsers
-            }
+                updateThemeToggleIcons();
+            } catch (e) {}
         }
 
-        /**
-         * 4. RENDERING: CATEGORIES & PRODUCT GRID
-         */
+        function toggleTheme() {
+            haptic('light');
+            document.body.classList.toggle('dark-theme');
+            updateThemeToggleIcons();
+        }
+
+        function updateThemeToggleIcons() {
+            const isDark = document.body.classList.contains('dark-theme');
+            document.getElementById('sunIcon').classList.toggle('hidden', !isDark);
+            document.getElementById('moonIcon').classList.toggle('hidden', isDark);
+        }
+
+        function haptic(type) {
+            try {
+                const hf = state.tg && state.tg.HapticFeedback;
+                if (!hf) return;
+                if (type === 'selection') hf.selectionChanged();
+                else if (type === 'success' || type === 'error' || type === 'warning') hf.notificationOccurred(type);
+                else hf.impactOccurred(type || 'light');
+            } catch (e) {}
+        }
+
+        /* 7. RENDER CATEGORIES & PRODUCT GRID */
         function renderCategories() {
-            const bar = document.getElementById('categoryBar');
-            bar.innerHTML = CATEGORIES.map(cat => {
-                const isActive = state.selectedCategory === cat;
-                const activeClasses = isActive
-                    ? 'bg-tg-button text-tg-buttonText font-bold shadow-xs'
-                    : 'bg-tg-secondaryBg text-tg-text font-medium hover:opacity-85';
-                return `
-                    <button 
-                        onclick="selectCategory('${cat}')"
-                        class="px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap transition-all tap-scale shrink-0 ${activeClasses}"
-                    >
-                        ${cat}
-                    </button>
-                `;
+            const d = dict();
+            const strip = document.getElementById('categoryStrip');
+            strip.innerHTML = CATEGORY_ORDER.map(cat => {
+                const active = state.category === cat ? 'active' : '';
+                return `<button type="button" class="cat-pill tap-active ${active}" onclick="selectCategory('${cat}')">${d.categories[cat]}</button>`;
             }).join('');
         }
 
+        function selectCategory(cat) {
+            haptic('selection');
+            state.category = cat;
+            renderCategories();
+            renderProducts();
+        }
+
         function getFilteredProducts() {
-            return PRODUCTS.filter(item => {
-                const matchesCat = state.selectedCategory === 'All' || item.category === state.selectedCategory;
-                const q = state.searchQuery.trim().toLowerCase();
-                const matchesSearch = !q || 
-                    item.title.toLowerCase().includes(q) || 
-                    item.shortDesc.toLowerCase().includes(q) ||
-                    item.category.toLowerCase().includes(q);
-                return matchesCat && matchesSearch;
+            const q = state.search.trim().toLowerCase();
+            return PRODUCTS.filter(p => {
+                const catOk = state.category === 'all' || p.category === state.category;
+                if (!q) return catOk;
+                const searchable = Object.values(p.i18n).flatMap(loc => [loc.title, loc.short, loc.badge]);
+                const catNames = Object.values(I18N).map(tr => tr.categories[p.category]);
+                const match = [...searchable, ...catNames].some(str => str.toLowerCase().includes(q));
+                return catOk && match;
             });
         }
 
-        function getProductTotalQtyInCart(productId) {
+        function getProductCartQty(productId) {
             return state.cart
-                .filter(c => c.productId === productId)
-                .reduce((sum, item) => sum + item.qty, 0);
+                .filter(item => item.productId === productId)
+                .reduce((acc, item) => acc + item.qty, 0);
         }
 
         function renderProducts() {
+            const d = dict();
             const grid = document.getElementById('productGrid');
-            const emptyState = document.getElementById('emptyState');
-            const countLabel = document.getElementById('itemCountLabel');
-            const heading = document.getElementById('sectionHeading');
+            const empty = document.getElementById('emptyState');
+            const items = getFilteredProducts();
 
-            const filtered = getFilteredProducts();
-            heading.textContent = state.selectedCategory === 'All' ? 'All Menu Items' : state.selectedCategory;
-            countLabel.textContent = `${filtered.length} ${filtered.length === 1 ? 'item' : 'items'}`;
+            document.getElementById('sectionHeading').textContent =
+                state.category === 'all' ? d.allProducts : d.categories[state.category];
+            document.getElementById('sectionCount').textContent =
+                `${items.length} ${items.length === 1 ? d.itemOne : d.itemMany}`;
 
-            if (filtered.length === 0) {
+            if (items.length === 0) {
                 grid.innerHTML = '';
-                emptyState.classList.remove('hidden');
+                empty.classList.remove('hidden');
                 return;
             }
 
-            emptyState.classList.add('hidden');
+            empty.classList.add('hidden');
+            grid.innerHTML = items.map(prod => {
+                const loc = getProdText(prod);
+                const qty = getProductCartQty(prod.id);
+                const svgMarkup = SVG_ICONS[prod.icon] || SVG_ICONS.headphones;
 
-            grid.innerHTML = filtered.map(product => {
-                const qtyInCart = getProductTotalQtyInCart(product.id);
-                const badgeHtml = product.badge
-                    ? `<span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-tg-bg/90 text-tg-text backdrop-blur-xs shadow-xs">${product.badge}</span>`
-                    : '';
-
-                // Action Control: Quick '+' button OR Quantity Stepper if already added
-                const actionControlHtml = qtyInCart === 0
-                    ? `
-                        <button 
-                            onclick="event.stopPropagation(); quickAddProduct('${product.id}')" 
-                            aria-label="Add ${product.title}"
-                            class="w-8 h-8 rounded-xl bg-tg-button text-tg-buttonText flex items-center justify-center shadow-xs tap-scale shrink-0"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" d="M12 5v14M5 12h14"></path>
-                            </svg>
-                        </button>
-                    `
-                    : `
-                        <div onclick="event.stopPropagation()" class="flex items-center bg-tg-button text-tg-buttonText rounded-xl h-8 px-1 gap-1.5 shadow-xs shrink-0">
-                            <button onclick="quickDecrementProduct('${product.id}')" class="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-sm hover:bg-black/15 tap-scale">−</button>
-                            <span class="text-xs font-extrabold min-w-[14px] text-center">${qtyInCart}</span>
-                            <button onclick="quickAddProduct('${product.id}')" class="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-sm hover:bg-black/15 tap-scale">+</button>
-                        </div>
-                    `;
+                const actionHtml = qty === 0
+                    ? `<button type="button" class="add-btn tap-active" onclick="event.stopPropagation(); quickAdd('${prod.id}')"><span>+</span><span>${d.addBtn}</span></button>`
+                    : `<div class="qty-stepper" onclick="event.stopPropagation()">
+                           <button type="button" class="stepper-btn tap-active" onclick="quickRemove('${prod.id}')">−</button>
+                           <span class="stepper-val">${qty}</span>
+                           <button type="button" class="stepper-btn tap-active" onclick="quickAdd('${prod.id}')">+</button>
+                       </div>`;
 
                 return `
-                    <article 
-                        onclick="openProductModal('${product.id}')"
-                        class="group bg-tg-secondaryBg/70 rounded-2xl overflow-hidden border border-black/5 dark:border-white/5 flex flex-col justify-between cursor-pointer tap-scale transition-colors"
-                    >
+                    <article class="product-card" onclick="openProductModal('${prod.id}')">
                         <div>
-                            <!-- Crisp 4:3 Image Container -->
-                            <div class="relative aspect-[4/3] w-full bg-tg-secondaryBg overflow-hidden">
-                                <img 
-                                    src="${product.image}" 
-                                    alt="${product.title}" 
-                                    loading="lazy"
-                                    onerror="this.src='https://placehold.co/600x450/334155/f8fafc?text=Item'"
-                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                >
-                                ${badgeHtml}
+                            <div class="card-thumb" style="background: ${prod.bg};">
+                                ${svgMarkup}
+                                <span class="card-badge">${loc.badge}</span>
+                                <span class="card-rating">★ ${prod.rating}</span>
                             </div>
-
-                            <!-- Card Copy -->
-                            <div class="p-2.5 pb-1.5">
-                                <h3 class="text-xs sm:text-sm font-bold leading-snug line-clamp-1">${product.title}</h3>
-                                <p class="text-[11px] text-tg-hint leading-tight line-clamp-2 mt-1">${product.shortDesc}</p>
+                            <div class="card-body">
+                                <h3 class="product-title">${loc.title}</h3>
+                                <p class="product-desc">${loc.short}</p>
                             </div>
                         </div>
-
-                        <!-- Card Footer: Price + Add/Stepper -->
-                        <div class="px-2.5 pb-2.5 pt-1 flex items-center justify-between gap-2">
-                            <span class="text-sm font-extrabold">$${product.price.toFixed(2)}</span>
-                            ${actionControlHtml}
+                        <div class="card-footer">
+                            <span class="product-price">$${prod.price.toFixed(2)}</span>
+                            ${actionHtml}
                         </div>
                     </article>
                 `;
             }).join('');
         }
 
-        /**
-         * 5. CART & CHECKOUT CALCULATIONS
-         */
-        function getCartTotals() {
-            const totalItems = state.cart.reduce((sum, item) => sum + item.qty, 0);
-            const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const discount = subtotal * state.discountRate;
-            const fee = (totalItems > 0 && state.fulfillmentMode === 'delivery') ? 2.50 : 0;
-            const total = Math.max(0, subtotal - discount + fee);
-
-            return { totalItems, subtotal, discount, fee, total };
-        }
-
-        function addToCart(productId, option, qty = 1) {
-            const product = PRODUCTS.find(p => p.id === productId);
-            if (!product) return;
-
-            const chosenOption = option || (product.options && product.options[0]) || 'Standard';
-            const key = `${productId}__${chosenOption}`;
-            const existing = state.cart.find(item => item.key === key);
-
+        /* 8. CART LOGIC & CALCULATIONS */
+        function addToCart(productId, optionIdx = 0, qty = 1) {
+            const prod = PRODUCTS.find(p => p.id === productId);
+            if (!prod) return;
+            const key = `${productId}__${optionIdx}`;
+            const existing = state.cart.find(c => c.key === key);
             if (existing) {
                 existing.qty += qty;
             } else {
                 state.cart.push({
                     key,
-                    productId: product.id,
-                    title: product.title,
-                    price: product.price,
-                    image: product.image,
-                    option: chosenOption,
+                    productId: prod.id,
+                    price: prod.price,
+                    optionIdx,
                     qty
                 });
             }
-
-            triggerHaptic('light');
-            updateUI();
+            haptic('light');
+            syncAllCartUI();
         }
 
-        function quickAddProduct(productId) {
-            const product = PRODUCTS.find(p => p.id === productId);
-            if (!product) return;
-            addToCart(productId, product.options[0], 1);
+        function quickAdd(productId) {
+            addToCart(productId, 0, 1);
         }
 
-        function quickDecrementProduct(productId) {
-            // Find the last added variant of this product in cart
+        function quickRemove(productId) {
             for (let i = state.cart.length - 1; i >= 0; i--) {
                 if (state.cart[i].productId === productId) {
-                    updateCartItemQty(state.cart[i].key, -1);
+                    state.cart[i].qty -= 1;
+                    if (state.cart[i].qty <= 0) state.cart.splice(i, 1);
                     break;
                 }
             }
+            haptic('light');
+            syncAllCartUI();
         }
 
-        function updateCartItemQty(key, delta) {
-            const index = state.cart.findIndex(item => item.key === key);
-            if (index === -1) return;
-
-            state.cart[index].qty += delta;
-            if (state.cart[index].qty <= 0) {
-                state.cart.splice(index, 1);
-                triggerHaptic('medium');
-            } else {
-                triggerHaptic('light');
+        function updateCartRowQty(key, delta) {
+            const idx = state.cart.findIndex(c => c.key === key);
+            if (idx === -1) return;
+            state.cart[idx].qty += delta;
+            if (state.cart[idx].qty <= 0) {
+                state.cart.splice(idx, 1);
             }
-
-            updateUI();
-
-            // Auto-close cart drawer if emptied while open
-            if (state.isCartOpen && state.cart.length === 0) {
+            haptic('light');
+            syncAllCartUI();
+            if (state.cart.length === 0 && state.isCartOpen) {
                 closeCartDrawer();
             }
         }
 
         function clearCart() {
+            haptic('warning');
             state.cart = [];
-            state.promoCode = null;
-            state.discountRate = 0;
-            document.getElementById('promoInput').value = '';
-            document.getElementById('promoFeedback').classList.add('hidden');
-            triggerHaptic('warning');
-            updateUI();
-            closeCartDrawer();
+            syncAllCartUI();
+            if (state.isCartOpen) closeCartDrawer();
         }
 
-        /**
-         * 6. SYNC TELEGRAM MAINBUTTON & FALLBACK STICKY BAR
-         */
-        function syncCheckoutBar() {
-            const { totalItems, total } = getCartTotals();
-            const headerCount = document.getElementById('headerCartCount');
-            headerCount.textContent = totalItems;
+        function getTotals() {
+            const count = state.cart.reduce((s, i) => s + i.qty, 0);
+            const subtotal = state.cart.reduce((s, i) => s + i.price * i.qty, 0);
+            const discount = subtotal * state.discountRate;
+            const fee = (count > 0 && state.fulfillment === 'delivery') ? 4.90 : 0;
+            const total = Math.max(0, subtotal - discount + fee);
+            return { count, subtotal, discount, fee, total };
+        }
 
-            const fallbackBar = document.getElementById('fallbackBottomBar');
-            const fallbackBadge = document.getElementById('fallbackBtnBadge');
-            const fallbackLabel = document.getElementById('fallbackBtnLabel');
-            const fallbackTotal = document.getElementById('fallbackBtnTotal');
-            const drawerFallbackWrap = document.getElementById('drawerFallbackCheckoutWrap');
+        function syncAllCartUI() {
+            renderProducts();
+            if (state.isCartOpen) renderCartSheet();
+            syncBottomCheckoutBar();
+        }
 
-            if (totalItems === 0) {
-                // Hide Telegram MainButton & Fallback Bar when cart is empty
-                if (state.isTelegramEnv && state.tg) {
-                    state.tg.MainButton.hide();
+        function syncBottomCheckoutBar() {
+            const { count, total } = getTotals();
+            const d = dict();
+
+            document.getElementById('headerCartBadge').textContent = count;
+
+            const stickyBar = document.getElementById('stickyCheckoutBar');
+            const drawerFooter = document.getElementById('drawerPlaceOrderFooter');
+
+            if (count === 0) {
+                stickyBar.classList.add('hidden');
+                if (state.isTgEnv && state.tg) {
+                    try { state.tg.MainButton.hide(); } catch (e) {}
                 }
-                fallbackBar.classList.add('hidden');
                 return;
             }
 
-            const buttonLabel = state.isCartOpen
-                ? `Place Order • $${total.toFixed(2)}`
-                : `View Order (${totalItems}) • $${total.toFixed(2)}`;
+            const itemWord = count === 1 ? d.itemOne : d.itemMany;
+            const tgBtnLabel = state.isCartOpen
+                ? `${d.placeOrder} • $${total.toFixed(2)}`
+                : `${d.viewCart} • ${count} ${itemWord} — $${total.toFixed(2)}`;
 
-            if (state.isTelegramEnv && state.tg) {
-                // Use Native Telegram MainButton
-                fallbackBar.classList.add('hidden');
-                if (drawerFallbackWrap) drawerFallbackWrap.classList.add('hidden');
-
-                state.tg.MainButton.setText(buttonLabel);
-                if (!state.tg.MainButton.isVisible) {
-                    state.tg.MainButton.show();
-                }
+            if (state.isTgEnv && state.tg) {
+                stickyBar.classList.add('hidden');
+                drawerFooter.classList.add('hidden');
+                try {
+                    state.tg.MainButton.setText(tgBtnLabel);
+                    if (!state.tg.MainButton.isVisible) state.tg.MainButton.show();
+                } catch (e) {}
             } else {
-                // Use Responsive Browser Fallback Bar
-                if (drawerFallbackWrap) drawerFallbackWrap.classList.remove('hidden');
-
+                drawerFooter.classList.remove('hidden');
                 if (state.isCartOpen || state.isProductModalOpen) {
-                    fallbackBar.classList.add('hidden');
+                    stickyBar.classList.add('hidden');
                 } else {
-                    fallbackBar.classList.remove('hidden');
-                    fallbackBadge.textContent = totalItems;
-                    fallbackLabel.textContent = 'View Order';
-                    fallbackTotal.textContent = `$${total.toFixed(2)}`;
+                    stickyBar.classList.remove('hidden');
+                    document.getElementById('stickyBarCount').textContent = count;
+                    document.getElementById('stickyBarLabel').textContent = d.viewOrder;
+                    document.getElementById('stickyBarTotal').textContent = `$${total.toFixed(2)}`;
                 }
             }
         }
 
-        function handleMainButtonClick() {
-            triggerHaptic('medium');
-            if (!state.isCartOpen) {
-                openCartDrawer();
-            } else {
-                processCheckout();
+        /* 9. MODAL & BOTTOM SHEET CONTROLS (CLEAN SCROLL LOCK) */
+        function lockRootScroll() {
+            document.documentElement.style.overflow = 'hidden';
+        }
+
+        function unlockRootScroll() {
+            if (!state.isProductModalOpen && !state.isCartOpen) {
+                document.documentElement.style.overflow = '';
             }
         }
 
-        /**
-         * 7. PRODUCT DETAIL BOTTOM SHEET MODAL
-         */
         function openProductModal(productId) {
-            const product = PRODUCTS.find(p => p.id === productId);
-            if (!product) return;
+            const prod = PRODUCTS.find(p => p.id === productId);
+            if (!prod) return;
+            haptic('selection');
 
-            triggerHaptic('selection');
-            state.activeModalProduct = product;
-            state.activeModalOption = product.options[0];
-            state.activeModalQty = 1;
+            state.modalProduct = prod;
+            state.modalOptionIdx = 0;
+            state.modalQty = 1;
             state.isProductModalOpen = true;
 
-            // Populate Modal Fields
-            document.getElementById('modalImg').src = product.image;
-            document.getElementById('modalImg').alt = product.title;
-            document.getElementById('modalCategory').textContent = product.category;
-            document.getElementById('modalTitle').textContent = product.title;
-            document.getElementById('modalPrice').textContent = `$${product.price.toFixed(2)}`;
-            document.getElementById('modalDesc').textContent = product.fullDesc;
+            populateProductModalContent();
+            lockRootScroll();
 
-            const badgeEl = document.getElementById('modalBadge');
-            if (product.badge) {
-                badgeEl.textContent = product.badge;
-                badgeEl.classList.remove('hidden');
-            } else {
-                badgeEl.classList.add('hidden');
+            if (state.isTgEnv && state.tg) {
+                try {
+                    state.tg.BackButton.show();
+                    state.tg.MainButton.hide();
+                } catch (e) {}
             }
 
-            renderModalOptions();
-            updateModalTotals();
-
-            // Show BackButton inside Telegram
-            if (state.isTelegramEnv && state.tg) {
-                state.tg.BackButton.show();
-                state.tg.MainButton.hide();
-            }
-
-            // Lock background scroll & reset sheet scroll to top
-            lockBackgroundScroll();
-            const scrollContainer = document.querySelector('#productModalPanel .bottom-sheet-scroll');
-            if (scrollContainer) scrollContainer.scrollTop = 0;
-
-            // Animate Sheet Up
-            const modal = document.getElementById('productModal');
-            const backdrop = document.getElementById('productModalBackdrop');
-            const panel = document.getElementById('productModalPanel');
-
-            modal.classList.remove('hidden');
-            requestAnimationFrame(() => {
-                backdrop.classList.remove('opacity-0');
-                panel.classList.remove('translate-y-full');
-            });
-
-            syncCheckoutBar();
+            document.getElementById('productModal').classList.remove('hidden');
+            syncBottomCheckoutBar();
         }
 
-        function renderModalOptions() {
-            const product = state.activeModalProduct;
-            const list = document.getElementById('modalOptionsList');
-            list.innerHTML = product.options.map(opt => {
-                const selected = state.activeModalOption === opt;
-                const cls = selected
-                    ? 'bg-tg-button text-tg-buttonText font-bold border-tg-button shadow-xs'
-                    : 'bg-tg-secondaryBg text-tg-text font-medium border-transparent';
-                return `
-                    <button 
-                        onclick="selectModalOption('${opt}')"
-                        class="py-2 px-2.5 rounded-xl text-xs border text-center truncate transition-all tap-scale ${cls}"
-                    >
-                        ${opt}
-                    </button>
-                `;
+        function populateProductModalContent() {
+            const prod = state.modalProduct;
+            if (!prod) return;
+            const loc = getProdText(prod);
+            const d = dict();
+
+            document.getElementById('modalCatLabel').textContent = d.categories[prod.category];
+            const hero = document.getElementById('modalHeroArt');
+            hero.style.background = prod.bg;
+            hero.innerHTML = SVG_ICONS[prod.icon] || SVG_ICONS.headphones;
+
+            document.getElementById('modalBadgePill').textContent = loc.badge;
+            document.getElementById('modalRatingText').textContent = `★ ${prod.rating}`;
+            document.getElementById('modalTitle').textContent = loc.title;
+            document.getElementById('modalPrice').textContent = `$${prod.price.toFixed(2)}`;
+            document.getElementById('modalDesc').textContent = loc.desc;
+
+            renderModalOptionPills();
+            updateModalQtySum();
+        }
+
+        function renderModalOptionPills() {
+            const loc = getProdText(state.modalProduct);
+            const grid = document.getElementById('modalOptionGrid');
+            grid.innerHTML = loc.options.map((opt, idx) => {
+                const sel = idx === state.modalOptionIdx ? 'selected' : '';
+                return `<button type="button" class="option-pill tap-active ${sel}" onclick="selectModalOption(${idx})">${opt}</button>`;
             }).join('');
         }
 
-        function selectModalOption(opt) {
-            triggerHaptic('selection');
-            state.activeModalOption = opt;
-            renderModalOptions();
+        function selectModalOption(idx) {
+            haptic('selection');
+            state.modalOptionIdx = idx;
+            renderModalOptionPills();
         }
 
-        function adjustModalQty(delta) {
-            const next = state.activeModalQty + delta;
+        function changeModalQty(delta) {
+            const next = state.modalQty + delta;
             if (next < 1 || next > 20) return;
-            triggerHaptic('light');
-            state.activeModalQty = next;
-            updateModalTotals();
+            haptic('light');
+            state.modalQty = next;
+            updateModalQtySum();
         }
 
-        function updateModalTotals() {
-            document.getElementById('modalQtyValue').textContent = state.activeModalQty;
-            const sum = state.activeModalProduct.price * state.activeModalQty;
-            document.getElementById('modalBtnPrice').textContent = `$${sum.toFixed(2)}`;
+        function updateModalQtySum() {
+            document.getElementById('modalQtyVal').textContent = state.modalQty;
+            const total = state.modalProduct.price * state.modalQty;
+            document.getElementById('modalAddSum').textContent = `$${total.toFixed(2)}`;
         }
 
-        function confirmModalAdd() {
-            if (!state.activeModalProduct) return;
-            addToCart(state.activeModalProduct.id, state.activeModalOption, state.activeModalQty);
-            showToast(`Added ${state.activeModalQty}× ${state.activeModalProduct.title}`);
+        function addModalProductToCart() {
+            if (!state.modalProduct) return;
+            const loc = getProdText(state.modalProduct);
+            addToCart(state.modalProduct.id, state.modalOptionIdx, state.modalQty);
+            showToast(dict().toastAdded(state.modalQty, loc.title));
             closeProductModal();
         }
 
         function closeProductModal() {
-            const modal = document.getElementById('productModal');
-            const backdrop = document.getElementById('productModalBackdrop');
-            const panel = document.getElementById('productModalPanel');
-
-            backdrop.classList.add('opacity-0');
-            panel.classList.add('translate-y-full');
             state.isProductModalOpen = false;
+            document.getElementById('productModal').classList.add('hidden');
+            unlockRootScroll();
 
-            if (state.isTelegramEnv && state.tg && !state.isCartOpen) {
-                state.tg.BackButton.hide();
+            if (state.isTgEnv && state.tg && !state.isCartOpen) {
+                try { state.tg.BackButton.hide(); } catch (e) {}
             }
-
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                if (!state.isCartOpen) {
-                    unlockBackgroundScroll();
-                }
-                syncCheckoutBar();
-            }, 280);
+            syncBottomCheckoutBar();
         }
 
-        /**
-         * 8. CART & CHECKOUT DRAWER
-         */
+        /* 10. CART DRAWER & CHECKOUT */
         function openCartDrawer() {
             if (state.cart.length === 0) {
-                triggerHaptic('warning');
-                showToast('Your cart is empty — add an item first!', '🛒');
+                haptic('warning');
+                showToast(dict().toastEmptyCart);
                 return;
             }
-
-            triggerHaptic('light');
+            haptic('selection');
             state.isCartOpen = true;
-            renderCartDrawer();
+            renderCartSheet();
+            lockRootScroll();
 
-            if (state.isTelegramEnv && state.tg) {
-                state.tg.BackButton.show();
+            if (state.isTgEnv && state.tg) {
+                try { state.tg.BackButton.show(); } catch (e) {}
             }
 
-            // Lock background scroll & reset drawer scroll to top
-            lockBackgroundScroll();
-            const scrollBody = document.getElementById('cartDrawerScrollBody');
-            if (scrollBody) scrollBody.scrollTop = 0;
-
-            const drawer = document.getElementById('cartDrawer');
-            const backdrop = document.getElementById('cartDrawerBackdrop');
-            const panel = document.getElementById('cartDrawerPanel');
-
-            drawer.classList.remove('hidden');
-            requestAnimationFrame(() => {
-                backdrop.classList.remove('opacity-0');
-                panel.classList.remove('translate-y-full');
-            });
-
-            syncCheckoutBar();
+            document.getElementById('cartDrawer').classList.remove('hidden');
+            syncBottomCheckoutBar();
         }
 
         function closeCartDrawer() {
-            const drawer = document.getElementById('cartDrawer');
-            const backdrop = document.getElementById('cartDrawerBackdrop');
-            const panel = document.getElementById('cartDrawerPanel');
-
-            backdrop.classList.add('opacity-0');
-            panel.classList.add('translate-y-full');
             state.isCartOpen = false;
+            document.getElementById('cartDrawer').classList.add('hidden');
+            unlockRootScroll();
 
-            if (state.isTelegramEnv && state.tg && !state.isProductModalOpen) {
-                state.tg.BackButton.hide();
+            if (state.isTgEnv && state.tg) {
+                try { state.tg.BackButton.hide(); } catch (e) {}
             }
-
-            setTimeout(() => {
-                drawer.classList.add('hidden');
-                if (!state.isProductModalOpen) {
-                    unlockBackgroundScroll();
-                }
-                syncCheckoutBar();
-            }, 280);
+            syncBottomCheckoutBar();
         }
 
-        /**
-         * 8. CART & CHECKOUT DRAWER
-         */
-        function openCartDrawer() {
-            if (state.cart.length === 0) {
-                triggerHaptic('warning');
-                showToast('Your cart is empty — add an item first!', '🛒');
-                return;
-            }
+        function renderCartSheet() {
+            const d = dict();
+            const { count, subtotal, discount, fee, total } = getTotals();
 
-            triggerHaptic('light');
-            state.isCartOpen = true;
-            renderCartDrawer();
+            document.getElementById('cartSubtitle').textContent = d.inCartCount(count);
 
-            if (state.isTelegramEnv && state.tg) {
-                state.tg.BackButton.show();
-            }
+            const list = document.getElementById('cartItemsList');
+            list.innerHTML = state.cart.map(item => {
+                const prod = PRODUCTS.find(p => p.id === item.productId);
+                const loc = prod ? getProdText(prod) : { title: item.productId, options: ['Standard'] };
+                const optName = loc.options[item.optionIdx] || loc.options[0] || '';
+                const bg = prod ? prod.bg : '#334155';
+                const icon = prod ? (SVG_ICONS[prod.icon] || SVG_ICONS.headphones) : SVG_ICONS.headphones;
 
-            const drawer = document.getElementById('cartDrawer');
-            const backdrop = document.getElementById('cartDrawerBackdrop');
-            const panel = document.getElementById('cartDrawerPanel');
-
-            drawer.classList.remove('hidden');
-            requestAnimationFrame(() => {
-                backdrop.classList.remove('opacity-0');
-                panel.classList.remove('translate-y-full');
-            });
-
-            syncCheckoutBar();
-        }
-
-        function closeCartDrawer() {
-            const drawer = document.getElementById('cartDrawer');
-            const backdrop = document.getElementById('cartDrawerBackdrop');
-            const panel = document.getElementById('cartDrawerPanel');
-
-            backdrop.classList.add('opacity-0');
-            panel.classList.add('translate-y-full');
-            state.isCartOpen = false;
-
-            if (state.isTelegramEnv && state.tg) {
-                state.tg.BackButton.hide();
-            }
-
-            setTimeout(() => {
-                drawer.classList.add('hidden');
-                syncCheckoutBar();
-            }, 280);
-        }
-
-        function renderCartDrawer() {
-            const container = document.getElementById('cartItemsContainer');
-            const { totalItems, subtotal, discount, fee, total } = getCartTotals();
-
-            document.getElementById('cartDrawerSubtitle').textContent = `${totalItems} ${totalItems === 1 ? 'item' : 'items'} in your basket`;
-
-            container.innerHTML = state.cart.map(item => `
-                <div class="flex items-center gap-3 bg-tg-secondaryBg/70 p-2.5 rounded-2xl border border-black/5 dark:border-white/5">
-                    <img src="${item.image}" alt="${item.title}" class="w-14 h-14 rounded-xl object-cover shrink-0 bg-tg-secondaryBg">
-                    <div class="flex-1 min-w-0">
-                        <h4 class="text-xs font-bold truncate">${item.title}</h4>
-                        <p class="text-[11px] text-tg-hint truncate">${item.option}</p>
-                        <p class="text-xs font-extrabold text-tg-button mt-0.5">$${(item.price * item.qty).toFixed(2)}</p>
+                return `
+                    <div class="cart-item-row">
+                        <div class="cart-item-thumb" style="background: ${bg};">${icon}</div>
+                        <div class="cart-item-info">
+                            <h4 class="cart-item-title">${loc.title}</h4>
+                            <p class="cart-item-opt">${optName}</p>
+                            <p class="cart-item-price">$${(item.price * item.qty).toFixed(2)}</p>
+                        </div>
+                        <div class="cart-row-stepper">
+                            <button type="button" class="cart-row-btn tap-active" onclick="updateCartRowQty('${item.key}', -1)">−</button>
+                            <span style="font-size: 12px; font-weight: 800; min-width: 16px; text-align: center;">${item.qty}</span>
+                            <button type="button" class="cart-row-btn tap-active" onclick="updateCartRowQty('${item.key}', 1)">+</button>
+                        </div>
                     </div>
-                    <div class="flex items-center bg-tg-bg rounded-xl p-1 gap-1.5 shadow-xs shrink-0">
-                        <button onclick="updateCartItemQty('${item.key}', -1)" class="w-7 h-7 rounded-lg bg-tg-secondaryBg text-tg-text font-bold text-sm flex items-center justify-center tap-scale">−</button>
-                        <span class="text-xs font-extrabold min-w-[16px] text-center">${item.qty}</span>
-                        <button onclick="updateCartItemQty('${item.key}', 1)" class="w-7 h-7 rounded-lg bg-tg-secondaryBg text-tg-text font-bold text-sm flex items-center justify-center tap-scale">+</button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
-            // Update Summary Breakdown
-            document.getElementById('summarySubtotal').textContent = `$${subtotal.toFixed(2)}`;
-            
-            const discountRow = document.getElementById('summaryDiscountRow');
+            document.getElementById('sumSubtotalVal').textContent = `$${subtotal.toFixed(2)}`;
+
+            const discRow = document.getElementById('sumDiscountRow');
             if (discount > 0) {
-                discountRow.classList.remove('hidden');
-                document.getElementById('summaryPromoLabel').textContent = state.promoCode;
-                document.getElementById('summaryDiscount').textContent = `-$${discount.toFixed(2)}`;
+                discRow.classList.remove('hidden');
+                document.getElementById('sumDiscountCode').textContent = state.promoCode;
+                document.getElementById('sumDiscountVal').textContent = `-$${discount.toFixed(2)}`;
             } else {
-                discountRow.classList.add('hidden');
+                discRow.classList.add('hidden');
             }
 
-            document.getElementById('summaryFeeLabel').textContent = state.fulfillmentMode === 'delivery' ? 'Express Delivery' : 'Store Pickup';
-            document.getElementById('summaryFee').textContent = fee > 0 ? `$${fee.toFixed(2)}` : 'Free';
-            document.getElementById('summaryTotal').textContent = `$${total.toFixed(2)}`;
-            document.getElementById('drawerFallbackTotal').textContent = `$${total.toFixed(2)}`;
+            document.getElementById('sumFeeLabel').textContent =
+                state.fulfillment === 'delivery' ? d.deliveryLabel : d.pickupLabel;
+            document.getElementById('sumFeeVal').textContent =
+                fee > 0 ? `$${fee.toFixed(2)}` : d.freeText;
+            document.getElementById('sumTotalVal').textContent = `$${total.toFixed(2)}`;
+            document.getElementById('placeOrderBtnTotal').textContent = `$${total.toFixed(2)}`;
         }
 
-        function setFulfillmentMode(mode) {
-            triggerHaptic('selection');
-            state.fulfillmentMode = mode;
+        function setFulfillment(mode) {
+            haptic('selection');
+            state.fulfillment = mode;
+            const d = dict();
 
-            const delBtn = document.getElementById('modeDeliveryBtn');
-            const pickBtn = document.getElementById('modePickupBtn');
+            document.getElementById('deliveryBtn').classList.toggle('active', mode === 'delivery');
+            document.getElementById('pickupBtn').classList.toggle('active', mode === 'pickup');
+            document.getElementById('custAddrInput').placeholder =
+                mode === 'delivery' ? d.addrDeliveryPlaceholder : d.addrPickupPlaceholder;
 
-            if (mode === 'delivery') {
-                delBtn.className = 'py-2 rounded-lg text-xs font-bold bg-tg-bg text-tg-text shadow-sm transition-all';
-                pickBtn.className = 'py-2 rounded-lg text-xs font-semibold text-tg-hint transition-all';
-            } else {
-                pickBtn.className = 'py-2 rounded-lg text-xs font-bold bg-tg-bg text-tg-text shadow-sm transition-all';
-                delBtn.className = 'py-2 rounded-lg text-xs font-semibold text-tg-hint transition-all';
-            }
-
-            updateUI();
+            renderCartSheet();
+            syncBottomCheckoutBar();
         }
 
-        function applyPromoCode() {
-            const input = document.getElementById('promoInput');
-            const feedback = document.getElementById('promoFeedback');
-            const code = input.value.trim().toUpperCase();
+        function applyPromo() {
+            const d = dict();
+            const raw = document.getElementById('promoCodeInput').value.trim().toUpperCase();
+            const msg = document.getElementById('promoFeedbackMsg');
+            msg.classList.remove('hidden');
 
-            feedback.classList.remove('hidden');
-
-            if (code === 'TG15' || code === 'WELCOME15') {
-                state.promoCode = code;
+            if (raw === 'TG15') {
+                state.promoCode = 'TG15';
                 state.discountRate = 0.15;
-                feedback.textContent = `✓ Promo code ${code} applied (15% off)`;
-                feedback.className = 'text-xs font-semibold text-emerald-600 dark:text-emerald-400 -mt-2';
-                triggerHaptic('success');
-            } else if (code === 'COFFEE10') {
-                state.promoCode = code;
-                state.discountRate = 0.10;
-                feedback.textContent = `✓ Promo code ${code} applied (10% off)`;
-                feedback.className = 'text-xs font-semibold text-emerald-600 dark:text-emerald-400 -mt-2';
-                triggerHaptic('success');
+                msg.textContent = d.promoValid('TG15');
+                msg.style.color = 'var(--success-text)';
+                haptic('success');
             } else {
                 state.promoCode = null;
                 state.discountRate = 0;
-                feedback.textContent = 'Invalid promo code. Try TG15 for 15% off.';
-                feedback.className = 'text-xs font-semibold text-tg-destructive -mt-2';
-                triggerHaptic('error');
+                msg.textContent = d.promoInvalid;
+                msg.style.color = 'var(--tg-theme-destructive-text-color)';
+                haptic('error');
             }
 
-            updateUI();
+            renderCartSheet();
+            syncBottomCheckoutBar();
         }
 
-        /**
-         * 9. CHECKOUT & ORDER CONFIRMATION FLOW
-         */
-        function processCheckout() {
-            const { totalItems, subtotal, discount, fee, total } = getCartTotals();
-            if (totalItems === 0) return;
+        function placeOrder() {
+            const { count, total } = getTotals();
+            if (count === 0) return;
 
-            triggerHaptic('success');
+            haptic('success');
+            const d = dict();
+            const orderId = `TG-${Math.floor(1000 + Math.random() * 9000)}`;
 
-            const orderPayload = {
-                orderId: `KB-${Math.floor(1000 + Math.random() * 9000)}`,
-                items: state.cart.map(i => ({
-                    id: i.productId,
-                    title: i.title,
-                    option: i.option,
-                    qty: i.qty,
-                    unitPrice: i.price
-                })),
-                fulfillment: state.fulfillmentMode,
-                note: document.getElementById('orderNoteInput').value.trim(),
-                promoCode: state.promoCode,
-                totals: {
-                    subtotal: Number(subtotal.toFixed(2)),
-                    discount: Number(discount.toFixed(2)),
-                    fee: Number(fee.toFixed(2)),
-                    total: Number(total.toFixed(2))
-                },
-                timestamp: new Date().toISOString()
-            };
-
-            // Hide Telegram MainButton during confirmation modal
-            if (state.isTelegramEnv && state.tg) {
-                state.tg.MainButton.hide();
-                state.tg.BackButton.hide();
-            }
-
-            // Close Cart Drawer & Display Confirmation Modal
             closeCartDrawer();
-            document.getElementById('orderNumberTag').textContent = `ORDER #${orderPayload.orderId}`;
-            document.getElementById('confirmedTotalAmount').textContent = `$${total.toFixed(2)}`;
-            document.getElementById('confirmationModal').classList.remove('hidden');
-
-            // Store payload for final Telegram sendData() or close()
-            window.__latestOrderPayload = orderPayload;
-        }
-
-        function finishOrderFlow() {
-            triggerHaptic('light');
-            const payload = window.__latestOrderPayload;
-
-            // If launched via KeyboardButton WebApp in Telegram, sendData transmits JSON back to bot
-            if (state.isTelegramEnv && state.tg && payload) {
-                try {
-                    state.tg.sendData(JSON.stringify(payload));
-                } catch (e) {
-                    // Inline button WebApps do not support sendData; close cleanly instead
-                    state.tg.close();
-                }
+            if (state.isTgEnv && state.tg) {
+                try { state.tg.MainButton.hide(); } catch (e) {}
             }
 
-            // Reset state for browser preview reuse
-            document.getElementById('confirmationModal').classList.add('hidden');
+            document.getElementById('confirmOrderId').textContent = `${d.orderPrefix} #${orderId}`;
+            document.getElementById('confirmMethodVal').textContent =
+                state.fulfillment === 'delivery' ? d.deliveryLabel : d.pickupLabel;
+            document.getElementById('confirmPaidVal').textContent = `$${total.toFixed(2)}`;
+            document.getElementById('confirmModal').classList.remove('hidden');
+            document.documentElement.style.overflow = 'hidden';
+        }
+
+        function closeConfirmModal() {
+            haptic('light');
+            document.getElementById('confirmModal').classList.add('hidden');
+            document.documentElement.style.overflow = '';
             state.cart = [];
             state.promoCode = null;
             state.discountRate = 0;
-            document.getElementById('promoInput').value = '';
-            document.getElementById('orderNoteInput').value = '';
-            document.getElementById('promoFeedback').classList.add('hidden');
-            updateUI();
+            document.getElementById('promoCodeInput').value = '';
+            document.getElementById('promoFeedbackMsg').classList.add('hidden');
+            syncAllCartUI();
         }
 
-        /**
-         * 10. SEARCH, FILTERS & UTILITIES
-         */
-        function selectCategory(cat) {
-            triggerHaptic('selection');
-            state.selectedCategory = cat;
-            renderCategories();
-            renderProducts();
-        }
-
+        /* 11. SEARCH, CLIPBOARD & TOAST HELPERS */
         function clearSearch() {
+            state.search = '';
             const input = document.getElementById('searchInput');
             input.value = '';
-            state.searchQuery = '';
             document.getElementById('clearSearchBtn').classList.add('hidden');
             renderProducts();
         }
 
         function resetFilters() {
-            state.selectedCategory = 'All';
+            haptic('light');
+            state.category = 'all';
             clearSearch();
             renderCategories();
             renderProducts();
         }
 
         function copyPromoCode(code) {
-            triggerHaptic('light');
-            const tempInput = document.createElement('input');
-            tempInput.value = code;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
+            haptic('light');
+            const temp = document.createElement('input');
+            temp.value = code;
+            document.body.appendChild(temp);
+            temp.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(temp);
 
-            // Also pre-fill the cart promo input for convenience
-            document.getElementById('promoInput').value = code;
-            showToast(`Copied "${code}" — 15% off applied at checkout!`);
+            document.getElementById('promoCodeInput').value = code;
+            showToast(dict().toastCopied(code));
         }
 
         let toastTimer = null;
-        function showToast(msg, icon = '✓') {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMessage').textContent = msg;
-            document.getElementById('toastIcon').textContent = icon;
-
-            toast.classList.remove('opacity-0', '-translate-y-2');
-            toast.classList.add('opacity-100', 'translate-y-0');
-
+        function showToast(text) {
+            const el = document.getElementById('toastBanner');
+            el.textContent = text;
+            el.classList.remove('hidden');
             clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => {
-                toast.classList.remove('opacity-100', 'translate-y-0');
-                toast.classList.add('opacity-0', '-translate-y-2');
-            }, 2200);
+            toastTimer = setTimeout(() => el.classList.add('hidden'), 2400);
         }
 
-        /**
-         * Browser Preview Dark/Light Theme Switcher
-         */
-        let previewDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        function togglePreviewTheme() {
-            previewDark = !previewDark;
-            const root = document.documentElement.style;
-            if (previewDark) {
-                root.setProperty('--tg-theme-bg-color', '#18181b');
-                root.setProperty('--tg-theme-text-color', '#f4f4f5');
-                root.setProperty('--tg-theme-hint-color', '#a1a1aa');
-                root.setProperty('--tg-theme-button-color', '#0284c7');
-                root.setProperty('--tg-theme-button-text-color', '#ffffff');
-                root.setProperty('--tg-theme-secondary-bg-color', '#27272a');
-            } else {
-                root.setProperty('--tg-theme-bg-color', '#ffffff');
-                root.setProperty('--tg-theme-text-color', '#0f172a');
-                root.setProperty('--tg-theme-hint-color', '#64748b');
-                root.setProperty('--tg-theme-button-color', '#2481cc');
-                root.setProperty('--tg-theme-button-text-color', '#ffffff');
-                root.setProperty('--tg-theme-secondary-bg-color', '#f4f4f5');
-            }
-            updateThemeIcons();
-        }
-
-        function updateThemeIcons() {
-            const sun = document.getElementById('themeIconSun');
-            const moon = document.getElementById('themeIconMoon');
-            if (!sun || !moon) return;
-            if (previewDark) {
-                sun.classList.remove('hidden');
-                moon.classList.add('hidden');
-            } else {
-                sun.classList.add('hidden');
-                moon.classList.remove('hidden');
-            }
-        }
-
-        function updateUI() {
-            renderProducts();
-            if (state.isCartOpen) {
-                renderCartDrawer();
-            }
-            syncCheckoutBar();
-        }
-
-        /**
-         * Enable horizontal mouse drag-to-scroll on desktop for category pills
-         */
-        function initCategoryDragScroll() {
-            const slider = document.getElementById('categoryBar');
-            if (!slider) return;
-
-            let isDown = false;
-            let startX = 0;
-            let scrollLeft = 0;
-            let hasDragged = false;
-
-            slider.addEventListener('mousedown', (e) => {
-                isDown = true;
-                hasDragged = false;
-                startX = e.pageX - slider.offsetLeft;
-                scrollLeft = slider.scrollLeft;
-            });
-
-            slider.addEventListener('mouseleave', () => {
-                isDown = false;
-            });
-
-            slider.addEventListener('mouseup', () => {
-                isDown = false;
-                setTimeout(() => { hasDragged = false; }, 0);
-            });
-
-            slider.addEventListener('mousemove', (e) => {
-                if (!isDown) return;
-                const x = e.pageX - slider.offsetLeft;
-                const walk = (x - startX) * 1.5;
-                if (Math.abs(walk) > 4) {
-                    hasDragged = true;
-                    e.preventDefault();
-                    slider.scrollLeft = scrollLeft - walk;
-                }
-            });
-
-            // Prevent accidental pill click when dragging horizontally
-            slider.addEventListener('click', (e) => {
-                if (hasDragged) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                }
-            }, true);
-        }
-
-        /**
-         * Smoothly scroll focused inputs into view inside bottom sheets when mobile keyboard opens
-         */
-        function initSheetInputFocusScroll() {
-            const inputs = document.querySelectorAll('.sheet-focus-input');
-            inputs.forEach(input => {
-                input.addEventListener('focus', () => {
-                    setTimeout(() => {
-                        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 300);
-                });
-            });
-        }
-
-        /**
-         * 11. BOOTSTRAP ON LOAD
-         */
+        /* 12. BOOTSTRAP IMMEDIATELY ON DOM READY */
         window.addEventListener('DOMContentLoaded', () => {
-            initTelegramWebApp();
-            renderCategories();
-            renderProducts();
-            syncCheckoutBar();
-            initCategoryDragScroll();
-            initSheetInputFocusScroll();
+            initTelegramSDK();
+            const initialLang = detectInitialLanguage();
+            setLanguage(initialLang, true);
 
-            // Search Input Listener
             const searchInput = document.getElementById('searchInput');
             const clearBtn = document.getElementById('clearSearchBtn');
             searchInput.addEventListener('input', (e) => {
-                state.searchQuery = e.target.value;
-                if (state.searchQuery.length > 0) {
-                    clearBtn.classList.remove('hidden');
-                } else {
-                    clearBtn.classList.add('hidden');
-                }
+                state.search = e.target.value;
+                clearBtn.classList.toggle('hidden', state.search.length === 0);
                 renderProducts();
             });
         });
